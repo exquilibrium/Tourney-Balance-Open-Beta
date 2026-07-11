@@ -302,7 +302,7 @@ mod:add_text("career_active_desc_dr_1", "Bardin taunts all nearby man-sized enem
 	Waystalker
 
 ]]
-ActivatedAbilitySettings.we_3[1].cooldown = 65
+-- ActivatedAbilitySettings.we_3[1].cooldown = 65 -- REVERT ULT to Official
 local sniper_dropoff_ranges = {
 	dropoff_start = 30,
 	dropoff_end = 50
@@ -395,6 +395,68 @@ Weapons.kerillian_waywatcher_career_skill_weapon.actions.action_career_hold.prio
     skaven_ratling_gunner = 1,
     beastmen_standard_bearer = 1,
 }
+
+--Loaded Bow Buff
+mod:add_text("kerillian_waywatcher_activated_ability_additional_projectile_desc", "Trueflight Volley fires 3 additional arrows.")
+mod:hook_origin(ActionCareerWEWaywatcher, "client_owner_start_action", function (self, new_action, t, chain_action_data, power_level, action_init_data)
+	ActionTrueFlightBow.super.client_owner_start_action(self, new_action, t, chain_action_data, power_level, action_init_data)
+
+	self.current_action = new_action
+	self.true_flight_template_id = TrueFlightTemplates[new_action.true_flight_template].lookup_id
+
+	assert(self.true_flight_template_id)
+
+	local owner_unit = self.owner_unit
+	local buff_extension = ScriptUnit.extension(owner_unit, "buff_system")
+	local is_critical_strike = ActionUtils.is_critical_strike(owner_unit, new_action, t)
+	local num_extra_shots = self:_update_extra_shots(buff_extension) or 0
+
+	self.num_extra_shots = num_extra_shots
+
+	self:_update_extra_shots(buff_extension, num_extra_shots)
+
+	self.num_projectiles = (new_action.num_projectiles or 1) + num_extra_shots
+
+	local talent_extension = ScriptUnit.has_extension(owner_unit, "talent_system")
+
+	if talent_extension:has_talent("kerillian_waywatcher_activated_ability_additional_projectile") then
+		self.num_projectiles = self.num_projectiles + 3 -- Hello
+	end
+
+	self.multi_projectile_spread = new_action.multi_projectile_spread or 0.075
+	self.num_projectiles_shot = 1
+
+	if chain_action_data then
+		self.targets = chain_action_data.targets
+
+		if not self.targets then
+			self.targets = {
+				chain_action_data.target,
+			}
+		end
+	end
+
+	if action_init_data then
+		self.targets = action_init_data.targets
+
+		if not self.targets then
+			self.targets = {
+				action_init_data.target,
+			}
+		end
+	end
+
+	self.state = "waiting_to_shoot"
+	self.time_to_shoot = t + (new_action.fire_time or 0)
+	self.power_level = power_level
+	self.extra_buff_shot = false
+
+	local hud_extension = ScriptUnit.has_extension(owner_unit, "hud_system")
+
+	self:_handle_critical_strike(is_critical_strike, buff_extension, hud_extension, nil, "on_critical_shot", nil)
+
+	self._is_critical_strike = is_critical_strike
+end)
 
 --Removed bloodshot and ult interaction
 mod:hook_origin(ActionCareerWEWaywatcher, "client_owner_post_update", function (self, dt, t, world, can_damage)
