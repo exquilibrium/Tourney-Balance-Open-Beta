@@ -95,5 +95,5 @@ ren "mods\TourneyBalance" "%target_folder%" || (
 )
 echo.
 
-echo Done! Both variants have been built successfully.
+echo Done! Built successfully.
 pause

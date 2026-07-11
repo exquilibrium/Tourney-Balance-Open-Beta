@@ -1342,7 +1342,7 @@ mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_passive", {
 })
 mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health every 10 seconds when below 50.0% health. This does not replace temp health.")
 mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 100%%. And increases the maximum amount to 100%%")
-mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 10.0%% every tick.")
+mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% every tick.")
 mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, buff, params)
     local t = params.t
     local buff_template = buff.template
@@ -1380,7 +1380,7 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
         end
 		]]
 		if cooldown_talent then
-			local cooldown_reduction = 0.1
+			local cooldown_reduction = 0.05
 			local career_extension = ScriptUnit.extension(unit, "career_system")
 
 			career_extension:reduce_activated_ability_cooldown_percent(cooldown_reduction)
@@ -1666,20 +1666,6 @@ mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_attack_speed_o
     duration = 10,
 	multiplier = 0.20
 })
---[[ mod:modify_talent("we_waywatcher", 5, 1, {
-	description = "kerillian_waywatcher_extra_arrow_melee_kill_desc",
-	name = "kerillian_waywatcher_extra_arrow_melee_kill",
-	num_ranks = 1,
-	icon = "kerillian_waywatcher_extra_arrow_melee_kill",
-	description_values = {
-		{
-			value = 10
-		}
-	},
-	buffs = {
-		"kerillian_waywatcher_extra_arrow_melee_kill"
-	}
-}) ]]
 
 -- Piercing Shot Refund Fix on Headshot Through Teammate
 ProcFunctions.kerillian_waywatcher_reduce_activated_ability_cooldown = function (owner_unit, buff, params)
@@ -1694,6 +1680,36 @@ ProcFunctions.kerillian_waywatcher_reduce_activated_ability_cooldown = function 
         end
     end
 end
+
+-- Piercing Shot grants pinpoint accuracy
+mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_1", {
+    multiplier = -1,
+    stat_buff = "reduced_spread",
+})
+mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_2", {
+    multiplier = -1,
+    stat_buff = "reduced_spread_hit",
+})
+mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_3", {
+    multiplier = -3,
+    stat_buff = "reduced_spread_moving",
+})
+mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_4", {
+    multiplier = -3,
+    stat_buff = "reduced_spread_shot",
+})
+mod:add_text("kerillian_waywatcher_activated_ability_piercing_shot_desc", "Trueshot Volley fires one piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown. \n\nMakes all ranged attacks pin point accurate and removes aim punch.")
+mod:modify_talent("we_waywatcher", 6, 1, {
+    num_ranks = 1,
+	description = "kerillian_waywatcher_activated_ability_piercing_shot_desc",
+    description_values = {},
+    buffs = {
+        "ws_sniper_buff_1",
+		"ws_sniper_buff_2",
+		"ws_sniper_buff_3",
+		"ws_sniper_buff_4"
+    },
+})
 
 --[[
 
