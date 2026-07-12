@@ -1507,7 +1507,7 @@ mod:add_text("elf_ws_movement_speed_on_special_kill_desc", "Killing a special or
 
 
 -- Richochet
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, each bouncing up to 3 times or until it hits an enemy. Refunds 1 ammo per bounce, when hitting an enemy.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, each bouncing up to 3 times or until it hits an enemy. Refunds 1 ammo when hitting an enemy after a bounce.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1526,14 +1526,14 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 	owner_unit = self._owner_unit
 	if ALIVE[owner_unit] then
 		local weapon_slot = "slot_ranged"
-		local ammo_amount = self._num_bounces
+		local ammo_amount = 1
 		local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
 		local slot_data = inventory_extension:get_slot_data(weapon_slot)
 		local right_unit_1p = slot_data.right_unit_1p
 		local left_unit_1p = slot_data.left_unit_1p
 		local ammo_extension = GearUtils.get_ammo_extension(right_unit_1p, left_unit_1p)
 
-		if ammo_extension then
+		if ammo_extension and self._num_bounces > 0 then
 			ammo_extension:add_ammo_to_reserve(ammo_amount)
 		end
 	end
@@ -1686,7 +1686,7 @@ mod:add_talent_buff_template("wood_elf", "ws_sniper_buff", {
     multiplier = -1,
     stat_buff = "reduced_spread_hit",
 })
-mod:add_text("_desc", "Kerillian no longer suffers from aim punch and Trueshot Volley fires one piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown.")
+mod:add_text("kerillian_waywatcher_activated_ability_piercing_shot_desc", "Kerillian no longer suffers from aim punch and Trueshot Volley fires one piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown.")
 mod:modify_talent("we_waywatcher", 6, 1, {
     num_ranks = 1,
 	description = "kerillian_waywatcher_activated_ability_piercing_shot_desc",
@@ -2251,6 +2251,61 @@ mod:add_talent_buff_template("witch_hunter", "victor_priest_5_2_speed_buff", {
 		"move_speed",
 	},
 })
+
+-- Templar's Knowledge: double the duration of the increased damage taken debuff
+mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_improved_damage_taken_ping", {
+	duration = 15, -- 5
+})
+mod:modify_talent("wh_captain", 4, 1, {
+	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
+	description_values = {},
+})
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes tagged enemies to take an additional 5%% damage (for 15 seconds). Victors pings now last 30 seconds")
+mod:hook_origin(PingSystem, "_update_server", function (self, context, t)
+	local PING_DURATION = 15
+	local SELF_PING_DURATION = 5
+	local VERSUS_ENEMY_PING_DURATION = 5
+
+	for pinger_unit, data in pairs(self._pinged_units) do
+		local pinged_unit = data.pinged_unit
+
+		if ALIVE[pinged_unit] then
+			if ALIVE[pinger_unit] then
+				local start_time = data.start_time
+
+				if pinger_unit == pinged_unit and t >= start_time + SELF_PING_DURATION then
+					self:_remove_ping(pinger_unit)
+				end
+
+				if self._current_mechanism_name == "versus" and data.ping_type == PingTypes.ENEMY_GENERIC then
+					if t >= start_time + VERSUS_ENEMY_PING_DURATION then
+						self:_remove_ping(pinger_unit)
+					end
+				else
+					local duration = PING_DURATION
+					local talent_extension = ScriptUnit.has_extension(pinger_unit, "talent_system")
+
+					if talent_extension and talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping") then
+						duration = 30
+					end
+
+					if t >= start_time + duration then
+						self:_remove_ping(pinger_unit)
+					end
+				end
+			else
+				self:_remove_ping(pinger_unit)
+			end
+		elseif data.position then
+			if t >= data.start_time + PING_DURATION then
+				self:_remove_ping(pinger_unit)
+			end
+		else
+			self:_remove_ping(pinger_unit)
+		end
+	end
+end)
+
 
 -- reduce long bubble to 7 seconds (Unyielding Blessing)
 CareerConstants.wh_priest.talent_6_1_improved_ability_duration = 7 --10 --this should already change the description as well
