@@ -2008,7 +2008,20 @@ mod:add_text("kerillian_shade_activated_stealth_combo_desc_tb", "Leaving Infiltr
 
 ]]
 
--- longer duration for radiant inheritance
+-- longer duration for radiant inheritance and trigger on regular ult
+--mod:modify_talent_buff_template("wood_elf", "victor_bountyhunter_activated_ability_railgun_delayed_add", {
+ --   event = "on_ability_activated"
+--})
+mod:modify_talent("we_thornsister", 4, 3, {
+    buffs = {
+        "tb_radiant_thorn"
+    }
+})
+mod:add_talent_buff_template("wood_elf", "tb_radiant_thorn", {
+	buff_func = "add_buff",
+	buff_to_add = "kerillian_thorn_sister_team_buff_aura",
+	event = "on_ability_activated",
+})
 mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_sister_team_buff_aura", {
 	duration = 20
 })
@@ -2016,7 +2029,7 @@ mod:modify_talent("we_thornsister", 4, 3, {
     description = "sister_inheritance_desc",
     description_values = {},
 })
-mod:add_text("sister_inheritance_desc", "Consuming Radiance grants Kerillian and nearby allies 15% power and 5% critical strike chance for 20 seconds.")
+mod:add_text("sister_inheritance_desc", "Using her career ability grants Kerillian and nearby allies 15% power and 5% critical strike chance for 20 seconds.")
 
 -- shorter cd for burst ult
 mod:modify_talent("we_thornsister", 6, 3, {
@@ -2026,7 +2039,7 @@ mod:modify_talent("we_thornsister", 6, 3, {
 })
 mod:add_talent_buff_template("wood_elf", "tb_cd_thorn", {
 	stat_buff = "activated_cooldown",
-	multiplier = -0.3,
+	multiplier = -0.4, -- META SHIFT
 	max_stacks = 1
 })
 mod:add_text("kerillian_thorn_sister_debuff_wall_desc_2", "Thornwake instead causes roots to burst from the ground, staggering enemies and applying Blackvenom to them. Reduces cooldown by 30%%.")

@@ -606,11 +606,14 @@ mod:add_text("career_active_desc_we_1_2", "Kerillian becomes undetectable, can p
 	Sister of the Thorn
 
 ]]
-ActivatedAbilitySettings.we_thornsister[1].cooldown = 60
+ActivatedAbilitySettings.we_thornsister[1].cooldown = 70 -- META SHIFT
+PassiveAbilitySettings.we_thornsister.passive_ability_classes[1].init_data.cooldown = 70 --META SHIFT
 mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_sister_passive_temp_health_funnel_aura_buff", {
 	multiplier = 0.10
 })
+mod:add_text("career_passive_desc_we_thornsister", "Kerillian is granted Radiance (a free use of her career skill) every 70 seconds.")
 
+--[[
 mod:hook_origin(PassiveAbilityThornsister, "_update_extra_abilities_info", function(self, talent_extension)
     if not talent_extension then
         return
@@ -633,11 +636,12 @@ mod:hook_origin(PassiveAbilityThornsister, "_update_extra_abilities_info", funct
     local cooldown = self._ability_init_data.cooldown
 
     if talent_extension:has_talent("kerillian_thorn_sister_faster_passive") then
-        cooldown = cooldown * 0.75
+        cooldown = cooldown * 0.5 -- META SHIFT
     end
 
     career_ext:update_extra_ability_charge(cooldown)
 end)
+]]
 
 local WALL_TYPES = table.enum("default", "bleed")
 local UNIT_NAMES = {
@@ -729,7 +733,7 @@ SpawnUnitTemplates.thornsister_thorn_wall_unit = {
 }
 
 mod:add_text("kerillian_thorn_sister_tanky_wall_desc_2", "Increase the width of the Thorn Wall.")
-mod:add_text("kerillian_thorn_sister_faster_passive_desc", "Reduce the cooldown of Radiance by 25%%, taking damage sets the cooldown back 2 seconds.")
+mod:add_text("kerillian_thorn_sister_faster_passive_desc", "Reduce the cooldown of Radiance by 50%%, taking damage increases the cooldown by 2 seconds (1 second internal cooldown).")
 
 --[[
 
