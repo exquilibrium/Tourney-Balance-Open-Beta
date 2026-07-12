@@ -1681,33 +1681,19 @@ ProcFunctions.kerillian_waywatcher_reduce_activated_ability_cooldown = function 
     end
 end
 
--- Piercing Shot grants pinpoint accuracy
-mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_1", {
-    multiplier = -1,
-    stat_buff = "reduced_spread",
-})
-mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_2", {
+-- Piercing Shot no aim punch
+mod:add_talent_buff_template("wood_elf", "ws_sniper_buff", {
     multiplier = -1,
     stat_buff = "reduced_spread_hit",
 })
-mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_3", {
-    multiplier = -3,
-    stat_buff = "reduced_spread_moving",
-})
-mod:add_talent_buff_template("wood_elf", "ws_sniper_buff_4", {
-    multiplier = -3,
-    stat_buff = "reduced_spread_shot",
-})
-mod:add_text("kerillian_waywatcher_activated_ability_piercing_shot_desc", "Trueshot Volley fires one piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown. \n\nMakes all ranged attacks pin point accurate and removes aim punch.")
+mod:add_text("_desc", "Kerillian no longer suffers from aim punch and Trueshot Volley fires one piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown.")
 mod:modify_talent("we_waywatcher", 6, 1, {
     num_ranks = 1,
 	description = "kerillian_waywatcher_activated_ability_piercing_shot_desc",
     description_values = {},
     buffs = {
-        "ws_sniper_buff_1",
-		"ws_sniper_buff_2",
-		"ws_sniper_buff_3",
-		"ws_sniper_buff_4"
+		"kerillian_waywatcher_activated_ability_piercing_shot",
+		"ws_sniper_buff",
     },
 })
 
