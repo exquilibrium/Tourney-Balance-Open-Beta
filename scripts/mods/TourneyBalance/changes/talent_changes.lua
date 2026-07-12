@@ -2041,6 +2041,142 @@ mod:add_text("kerillian_thorn_sister_debuff_wall_desc_2", "Thornwake instead cau
 ╚═════╝░╚═╝░░╚═╝╚══════╝░░░╚═╝░░░╚══════╝╚═╝░░░░░░░░╚═╝░░░╚═╝░░╚═╝╚══════╝
 
 ]]
+
+
+--[[
+
+	WHC Talents
+
+]]
+-- Templar's Knowledge: double the duration of the increased damage taken debuff
+mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_improved_damage_taken_ping", {
+	duration = 15, -- 5
+})
+mod:modify_talent("wh_captain", 4, 1, {
+	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
+	description_values = {},
+})
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes tagged enemies to take an additional 5%% damage (for 15 seconds). Victors pings now last 30 seconds")
+mod:hook_origin(PingSystem, "_update_server", function (self, context, t)
+	local PING_DURATION = 15
+	local SELF_PING_DURATION = 5
+	local VERSUS_ENEMY_PING_DURATION = 5
+
+	for pinger_unit, data in pairs(self._pinged_units) do
+		local pinged_unit = data.pinged_unit
+
+		if ALIVE[pinged_unit] then
+			if ALIVE[pinger_unit] then
+				local start_time = data.start_time
+
+				if pinger_unit == pinged_unit and t >= start_time + SELF_PING_DURATION then
+					self:_remove_ping(pinger_unit)
+				end
+
+				if self._current_mechanism_name == "versus" and data.ping_type == PingTypes.ENEMY_GENERIC then
+					if t >= start_time + VERSUS_ENEMY_PING_DURATION then
+						self:_remove_ping(pinger_unit)
+					end
+				else
+					local duration = PING_DURATION
+					local talent_extension = ScriptUnit.has_extension(pinger_unit, "talent_system")
+
+					if talent_extension and talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping") then
+						duration = 30
+					end
+
+					if t >= start_time + duration then
+						self:_remove_ping(pinger_unit)
+					end
+				end
+			else
+				self:_remove_ping(pinger_unit)
+			end
+		elseif data.position then
+			if t >= data.start_time + PING_DURATION then
+				self:_remove_ping(pinger_unit)
+			end
+		else
+			self:_remove_ping(pinger_unit)
+		end
+	end
+end)
+
+-- I Shall Judge You All
+--[[
+
+	Witch Hunter Captain
+
+]]
+
+-- I Shall Judge You All: also tags every special on the map when Animosity is used
+mod:modify_talent("wh_captain", 6, 1, {
+	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
+	description_values = {},
+})
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity and tags every special enemy.")
+
+local SPECIAL_PING_DURATION = 15
+local pinged_specials = {}
+
+mod:hook_safe(CareerAbilityWHCaptain, "_run_ability", function (self)
+	local owner_unit = self._owner_unit
+	local talent_extension = ScriptUnit.extension(owner_unit, "talent_system")
+
+	if not talent_extension:has_talent("victor_captain_activated_ability_stagger_ping_debuff") then
+		return
+	end
+
+	local special_ping_duration = SPECIAL_PING_DURATION
+
+	if talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping") then
+		special_ping_duration = 30
+	end
+
+	local proximity_system = Managers.state.entity:system("proximity_system")
+	local t = Managers.time:time("game")
+
+	for special_unit, _ in pairs(proximity_system.special_unit_extension_map) do
+		if ALIVE[special_unit] then
+			if pinged_specials[special_unit] then
+				-- already tagged by this feature, just refresh its timer
+				pinged_specials[special_unit].expire_t = t + special_ping_duration
+			else
+				local ping_extension = ScriptUnit.has_extension(special_unit, "ping_system")
+
+				if ping_extension then
+					ping_extension:set_pinged(true, false, owner_unit, true)
+
+					pinged_specials[special_unit] = {
+						owner_unit = owner_unit,
+						expire_t = t + special_ping_duration,
+					}
+				end
+			end
+		end
+	end
+end)
+
+-- IngameHud.update runs every frame client-side; piggybacking on it lets us
+-- expire our manual pings without clobbering mod.update (already used elsewhere in this mod)
+mod:hook_safe(IngameHud, "update", function (self)
+	local t = Managers.time:time("game")
+
+	for special_unit, data in pairs(pinged_specials) do
+		if not ALIVE[special_unit] or t >= data.expire_t then
+			if ALIVE[special_unit] then
+				local ping_extension = ScriptUnit.has_extension(special_unit, "ping_system")
+
+				if ping_extension then
+					ping_extension:set_pinged(false, nil, data.owner_unit, true)
+				end
+			end
+
+			pinged_specials[special_unit] = nil
+		end
+	end
+end)
+
 --[[
 
 	Bounty Hunter Talents
@@ -2251,61 +2387,6 @@ mod:add_talent_buff_template("witch_hunter", "victor_priest_5_2_speed_buff", {
 		"move_speed",
 	},
 })
-
--- Templar's Knowledge: double the duration of the increased damage taken debuff
-mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_improved_damage_taken_ping", {
-	duration = 15, -- 5
-})
-mod:modify_talent("wh_captain", 4, 1, {
-	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
-	description_values = {},
-})
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes tagged enemies to take an additional 5%% damage (for 15 seconds). Victors pings now last 30 seconds")
-mod:hook_origin(PingSystem, "_update_server", function (self, context, t)
-	local PING_DURATION = 15
-	local SELF_PING_DURATION = 5
-	local VERSUS_ENEMY_PING_DURATION = 5
-
-	for pinger_unit, data in pairs(self._pinged_units) do
-		local pinged_unit = data.pinged_unit
-
-		if ALIVE[pinged_unit] then
-			if ALIVE[pinger_unit] then
-				local start_time = data.start_time
-
-				if pinger_unit == pinged_unit and t >= start_time + SELF_PING_DURATION then
-					self:_remove_ping(pinger_unit)
-				end
-
-				if self._current_mechanism_name == "versus" and data.ping_type == PingTypes.ENEMY_GENERIC then
-					if t >= start_time + VERSUS_ENEMY_PING_DURATION then
-						self:_remove_ping(pinger_unit)
-					end
-				else
-					local duration = PING_DURATION
-					local talent_extension = ScriptUnit.has_extension(pinger_unit, "talent_system")
-
-					if talent_extension and talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping") then
-						duration = 30
-					end
-
-					if t >= start_time + duration then
-						self:_remove_ping(pinger_unit)
-					end
-				end
-			else
-				self:_remove_ping(pinger_unit)
-			end
-		elseif data.position then
-			if t >= data.start_time + PING_DURATION then
-				self:_remove_ping(pinger_unit)
-			end
-		else
-			self:_remove_ping(pinger_unit)
-		end
-	end
-end)
-
 
 -- reduce long bubble to 7 seconds (Unyielding Blessing)
 CareerConstants.wh_priest.talent_6_1_improved_ability_duration = 7 --10 --this should already change the description as well
