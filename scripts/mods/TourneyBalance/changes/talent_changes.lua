@@ -1340,9 +1340,10 @@ mod:add_text("bardin_engineer_melee_power_ranged_power_desc", "Melee Power is in
 mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_passive", {
     update_func = "gs_update_kerillian_waywatcher_regen"
 })
-mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health every 10 seconds when below 50.0% health. This does not replace temp health.")
-mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 100%%. And increases the maximum amount to 100%%")
+mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health when below 50.0% health and 3% ammo every 10 seconds. Health regeneration caps at 50%% and does not replace temp health.")
+mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 50%%. And increases the maximum amount to 100%%. No longer regenerates ammo.")
 mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% every tick.")
+mod:add_text("kerillian_waywatcher_group_regen_desc", "Amaranthe's health regeneration also affects the other members of the party.")
 mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, buff, params)
     local t = params.t
     local buff_template = buff.template
@@ -1354,31 +1355,31 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
     local time_between_heals = buff_template.time_between_heals
 
     if next_heal_tick < t and Unit.alive(unit) then
+
+		-- Ammo regen becomes base, when not ishas embrace
         local talent_extension = ScriptUnit.extension(unit, "talent_system")
+		if not talent_extension:has_talent("kerillian_waywatcher_improved_regen", "wood_elf", true) then
+			local weapon_slot = "slot_ranged"
+			local inventory_extension = ScriptUnit.extension(unit, "inventory_system")
+			local slot_data = inventory_extension:get_slot_data(weapon_slot)
+
+			if slot_data then
+				local right_unit_1p = slot_data.right_unit_1p
+				local left_unit_1p = slot_data.left_unit_1p
+				local right_hand_ammo_extension = ScriptUnit.has_extension(right_unit_1p, "ammo_system")
+				local left_hand_ammo_extension = ScriptUnit.has_extension(left_unit_1p, "ammo_system")
+				local ammo_extension = right_hand_ammo_extension or left_hand_ammo_extension
+
+				if ammo_extension then
+					local ammo_bonus_fraction = 0.03 -- ammo regen here
+					local ammo_amount = math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
+
+					ammo_extension:add_ammo_to_reserve(ammo_amount)
+				end
+			end
+		end
+
         local cooldown_talent = talent_extension:has_talent("kerillian_waywatcher_passive_cooldown_restore", "wood_elf", true)
-
-		--[[
-        if cooldown_talent then
-            local weapon_slot = "slot_ranged"
-            local inventory_extension = ScriptUnit.extension(unit, "inventory_system")
-            local slot_data = inventory_extension:get_slot_data(weapon_slot)
-
-            if slot_data then
-                local right_unit_1p = slot_data.right_unit_1p
-                local left_unit_1p = slot_data.left_unit_1p
-                local right_hand_ammo_extension = ScriptUnit.has_extension(right_unit_1p, "ammo_system")
-                local left_hand_ammo_extension = ScriptUnit.has_extension(left_unit_1p, "ammo_system")
-                local ammo_extension = right_hand_ammo_extension or left_hand_ammo_extension
-
-                if ammo_extension then
-                    local ammo_bonus_fraction = 0.05
-                    local ammo_amount = math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
-
-                    ammo_extension:add_ammo_to_reserve(ammo_amount)
-                end
-            end
-        end
-		]]
 		if cooldown_talent then
 			local cooldown_reduction = 0.05
 			local career_extension = ScriptUnit.extension(unit, "career_system")
@@ -1394,7 +1395,7 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
 
             if talent_extension:has_talent("kerillian_waywatcher_improved_regen", "wood_elf", true) then
                 regen_cap = 1
-                heal_amount = heal_amount * 2
+                heal_amount = heal_amount * 1.5
             end
 
             if health_extension:is_alive() and not status_extension:is_knocked_down() and not status_extension:is_assisted_respawning() then
@@ -1507,7 +1508,7 @@ mod:add_text("elf_ws_movement_speed_on_special_kill_desc", "Killing a special or
 
 
 -- Richochet
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, each bouncing up to 3 times or until it hits an enemy. Refunds 1 ammo when hitting an enemy after a bounce.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Each bounce increases the power of projectile by 20%% and refunds 1 ammo when hitting an enemy.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1522,11 +1523,16 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 		return
 	end
 
-	-- 1 ammo refund per richochet until hit.
-	owner_unit = self._owner_unit
-	if ALIVE[owner_unit] then
+	-- Ricochet talent effects (ammo refund + double damage) only apply if the
+	-- owner actually has the talent -- other characters can also have bouncing projectiles.
+	local owner_unit = self._owner_unit
+	local talent_extension = ScriptUnit.has_extension(owner_unit, "talent_system")
+	local has_ricochet_talent = talent_extension and talent_extension:has_talent("kerillian_waywatcher_projectile_ricochet")
+
+	-- 1 ammo refund when hit after ricochet.
+	if ALIVE[owner_unit] and has_ricochet_talent then
 		local weapon_slot = "slot_ranged"
-		local ammo_amount = 1
+		local ammo_amount = self._num_bounces
 		local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
 		local slot_data = inventory_extension:get_slot_data(weapon_slot)
 		local right_unit_1p = slot_data.right_unit_1p
@@ -1569,7 +1575,15 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 
 		DamageUtils.buff_on_attack(owner_unit, hit_unit, charge_value, is_critical_strike, hit_zone_name, num_targets_hit, send_to_server, buff_type, unmodified, self.item_name)
 
+		-- Ricochet: power increase on hits that occur after a bounce.
+		local original_power_level = self.power_level
+
+		if has_ricochet_talent and self._num_bounces > 0 and not aoe_data then
+			self.power_level = original_power_level * (1 + 0.2 * self._num_bounces)
+		end
+
 		shield_blocked, forced_penetration = self:hit_enemy_damage(damage_profile, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
+		self.power_level = original_power_level -- reset power level from ricochet
 		allow_link = hit_zone_name ~= "ward"
 
 		if allow_link and breed and not shield_blocked then
@@ -1677,12 +1691,24 @@ ProcFunctions.kerillian_waywatcher_reduce_activated_ability_cooldown = function 
             local career_extension = ScriptUnit.extension(owner_unit, "career_system")
 
             career_extension:reduce_activated_ability_cooldown_percent(buff.multiplier)
+
+            -- 1 ammo refund on headshot with Piercing Shot.
+            local weapon_slot = "slot_ranged"
+            local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
+            local slot_data = inventory_extension:get_slot_data(weapon_slot)
+            local right_unit_1p = slot_data.right_unit_1p
+            local left_unit_1p = slot_data.left_unit_1p
+            local ammo_extension = GearUtils.get_ammo_extension(right_unit_1p, left_unit_1p)
+
+            if ammo_extension then
+                ammo_extension:add_ammo_to_reserve(1)
+            end
         end
     end
 end
 
 -- Piercing Shot no aim punch
-mod:add_text("kerillian_waywatcher_activated_ability_piercing_shot_desc", "Trueshot Volley fires one pinpoint accurate piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown.")
+mod:add_text("kerillian_waywatcher_activated_ability_piercing_shot_desc", "Trueshot Volley fires one pinpoint accurate piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown and 1 ammo.")
 mod:modify_talent("we_waywatcher", 6, 1, {
     num_ranks = 1,
 	description = "kerillian_waywatcher_activated_ability_piercing_shot_desc",
@@ -1690,6 +1716,19 @@ mod:modify_talent("we_waywatcher", 6, 1, {
     buffs = {
 		"kerillian_waywatcher_activated_ability_piercing_shot",
     },
+})
+
+-- Kurnous' Reward ammo refund nerf
+mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_activated_ability_restore_ammo_on_career_skill_special_kill", {
+	ammo_bonus_fraction = 0.2, -- 0.3
+})
+mod:modify_talent("we_waywatcher", 6, 3, {
+	description_values = {
+		{
+			value_type = "percent",
+			value = 0.2, -- 0.3
+		},
+	},
 })
 
 --[[
