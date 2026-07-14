@@ -2135,9 +2135,9 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Reveals all taggable enemies to Victor and applies Witch Hunt to all taggable enemies and those hit by Animosity. Templar's Knowledge now applies to all enemies marked by Witch Hunt.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Reveal and apply Witch Hunt to all taggable enemies and those hit by Animosity. Templar's Knowledge now applies to all enemies marked by Witch Hunt.")
 
-local PING_DURATION = 15
+local PING_DURATION = 1500
 local marked_enemies = {}
 
 mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, impact_position, rotation, explosion_template, scale, damage_source, is_server, is_husk, damaging_unit, attacker_power_level, is_critical_strike, source_attacker_unit)
