@@ -2083,6 +2083,26 @@ mod:add_text("kerillian_thorn_sister_debuff_wall_desc_2", "Thornwake instead cau
 
 ]]
 
+-- Riposte Updated
+mod:modify_talent("wh_captain", 2, 1, {
+	description = "victor_witchhunter_guaranteed_crit_on_timed_block_desc_new",
+	description_values = {},
+})
+mod:add_text("victor_witchhunter_guaranteed_crit_on_timed_block_desc_new", "Blocking just as an enemy attack is about to hit causes your next melee or ranged attack within 2 seconds to be a guaranteed critical hit.")
+
+
+-- Fervency: extend guaranteed melee crit from 6s to 10s
+mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_activated_ability_guaranteed_crit_self_buff", {
+	duration = 10, -- 6
+})
+
+mod:modify_talent("wh_captain", 6, 2, {
+	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
+	description_values = {},
+})
+mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds. No longer affects teammates and ranged attacks.")
+
+
 -- Templar's Knowledge
 -- 1. Team-wide +5% damage-taken debuff, extended from 5s to 15s (unchanged effect, longer duration)
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_improved_damage_taken_ping", {
@@ -2097,7 +2117,7 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes tagged enemies to take an additional 5%% damage for 15 seconds. Victor deals 25%% increased damage to tagged enemies.")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage for 15 seconds. Victor deals 25.0% more damage to enemies tagged with Witch Hunt (except Lords and Bosses).")
 
 -- I Shall Judge You All
 --[[
@@ -2111,7 +2131,7 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity and reveals all taggable enemies.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to all taggable enemies and those hit by Animosity. Templar's Knowledge now applies to all enemies marked by Witch Hunt.")
 
 local PERMANENT_DURATION = 900
 local permanently_marked_enemies = {}

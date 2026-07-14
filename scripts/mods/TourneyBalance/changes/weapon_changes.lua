@@ -218,7 +218,18 @@ Weapons.blunderbuss_template_1.actions.action_two.default.push_radius = 2.5--0.9
 Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
 Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
 
--- Test Bash Nerf 2.0
+--- Test Bash Nerf 2.0
+--TB Shotgun Bash Nerf
+    -- prevents reload cancel
+Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[5].start_time = 0.75 -- 0.5
+Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[5].start_time = 0.75 -- 0.65
+Weapons.wh_deus_01_template_1.actions.action_two.default.allowed_chain_actions[3].start_time = 2 -- 0.5
+    -- prevents QQ
+Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0.75 -- 0.2
+Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0.75 -- 0
+Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0.75 -- 0.2
+Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0.75 -- 0
+Weapons.wh_deus_01_template_1.actions.action_two.default.allowed_chain_actions[4].start_time = 2 -- 0.4
 
 
 
