@@ -1508,7 +1508,7 @@ mod:add_text("elf_ws_movement_speed_on_special_kill_desc", "Killing a special or
 
 
 -- Richochet
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Each bounce increases the power of projectile by 20%% and refunds 1 ammo when hitting an enemy.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Each bounce increases the power of projectile by 20%% and refunds 1 ammo when hitting an enemy after a bounce.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1532,7 +1532,7 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 	-- 1 ammo refund when hit after ricochet.
 	if ALIVE[owner_unit] and has_ricochet_talent then
 		local weapon_slot = "slot_ranged"
-		local ammo_amount = self._num_bounces
+		local ammo_amount = 1 --self._num_bounces
 		local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
 		local slot_data = inventory_extension:get_slot_data(weapon_slot)
 		local right_unit_1p = slot_data.right_unit_1p
@@ -1693,6 +1693,7 @@ ProcFunctions.kerillian_waywatcher_reduce_activated_ability_cooldown = function 
             career_extension:reduce_activated_ability_cooldown_percent(buff.multiplier)
 
             -- 1 ammo refund on headshot with Piercing Shot.
+			--[[
             local weapon_slot = "slot_ranged"
             local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
             local slot_data = inventory_extension:get_slot_data(weapon_slot)
@@ -1703,11 +1704,13 @@ ProcFunctions.kerillian_waywatcher_reduce_activated_ability_cooldown = function 
             if ammo_extension then
                 ammo_extension:add_ammo_to_reserve(1)
             end
+			]]
         end
     end
 end
 
 -- Piercing Shot no aim punch
+--[[
 mod:add_text("kerillian_waywatcher_activated_ability_piercing_shot_desc", "Trueshot Volley fires one pinpoint accurate piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown and 1 ammo.")
 mod:modify_talent("we_waywatcher", 6, 1, {
     num_ranks = 1,
@@ -1717,6 +1720,7 @@ mod:modify_talent("we_waywatcher", 6, 1, {
 		"kerillian_waywatcher_activated_ability_piercing_shot",
     },
 })
+]]
 
 -- Kurnous' Reward ammo refund nerf
 mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_activated_ability_restore_ammo_on_career_skill_special_kill", {
@@ -2117,7 +2121,7 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage for 15 seconds. Victor deals 25.0% more damage to enemies tagged with Witch Hunt (except Lords and Bosses).")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%%. Victor deals 25.0% more damage to enemies affected by Witch Hunt (except Specials, Bosses and Lords).")
 
 -- I Shall Judge You All
 --[[
