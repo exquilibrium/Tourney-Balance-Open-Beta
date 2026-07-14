@@ -225,11 +225,14 @@ Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[
 Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[5].start_time = 0.75 -- 0.65
 Weapons.wh_deus_01_template_1.actions.action_two.default.allowed_chain_actions[3].start_time = 2 -- 0.5
     -- prevents QQ
-Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0.75 -- 0.2
-Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0.75 -- 0
-Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0.75 -- 0.2
-Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0.75 -- 0
+Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[2].start_time = 0.75 -- 0.5
+Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[2].start_time = 0.75 -- 0.45
 Weapons.wh_deus_01_template_1.actions.action_two.default.allowed_chain_actions[4].start_time = 2 -- 0.4
+    -- prevents early swap cancel (before it hits)
+Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0 -- 0.2
+Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0 -- 0
+Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0 -- 0.2
+Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0 -- 0
 
 
 
