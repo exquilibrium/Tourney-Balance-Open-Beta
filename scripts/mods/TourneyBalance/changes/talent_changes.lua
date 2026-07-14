@@ -1340,8 +1340,8 @@ mod:add_text("bardin_engineer_melee_power_ranged_power_desc", "Melee Power is in
 mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_passive", {
     update_func = "gs_update_kerillian_waywatcher_regen"
 })
-mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health when below 50.0% health and 3% ammo every 10 seconds. Health regeneration caps at 50%% and does not replace temp health.")
-mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 50%%. And increases the maximum amount to 100%%. No longer regenerates ammo.")
+mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health when below 50.0% health and 3% ammo every 10 seconds. This does not replace temp health.")
+mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 100%%. Health regeneration caps at 100%%. No longer restores ammo.")
 mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% every tick.")
 mod:add_text("kerillian_waywatcher_group_regen_desc", "Amaranthe's health regeneration also affects the other members of the party.")
 mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, buff, params)
@@ -1395,7 +1395,7 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
 
             if talent_extension:has_talent("kerillian_waywatcher_improved_regen", "wood_elf", true) then
                 regen_cap = 1
-                heal_amount = heal_amount * 1.5
+                heal_amount = heal_amount * 2
             end
 
             if health_extension:is_alive() and not status_extension:is_knocked_down() and not status_extension:is_assisted_respawning() then
