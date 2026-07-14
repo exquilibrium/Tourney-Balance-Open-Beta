@@ -2135,54 +2135,80 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to all taggable enemies and those hit by Animosity. Templar's Knowledge now applies to all enemies marked by Witch Hunt.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Reveals all taggable enemies to Victor and applies Witch Hunt to all taggable enemies and those hit by Animosity. Templar's Knowledge now applies to all enemies marked by Witch Hunt.")
 
-local PERMANENT_DURATION = 900
-local permanently_marked_enemies = {}
+local PING_DURATION = 15
+local marked_enemies = {}
 
-mod:hook_safe(CareerAbilityWHCaptain, "_run_ability", function (self)
-	local owner_unit = self._owner_unit
-	local talent_extension = ScriptUnit.extension(owner_unit, "talent_system")
+mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, impact_position, rotation, explosion_template, scale, damage_source, is_server, is_husk, damaging_unit, attacker_power_level, is_critical_strike, source_attacker_unit)
+	if explosion_template ~= ExplosionTemplates.victor_captain_activated_ability_stagger_ping_debuff
+		and explosion_template ~= ExplosionTemplates.victor_captain_activated_ability_stagger_ping_debuff_improved then
+		return
+	end
 
-	if not talent_extension:has_talent("victor_captain_activated_ability_stagger_ping_debuff") then
+	if not ALIVE[attacker_unit] then
+		return
+	end
+
+	local talent_extension = ScriptUnit.has_extension(attacker_unit, "talent_system")
+
+	if not talent_extension then
 		return
 	end
 
 	local has_templars_knowledge = talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping")
 	local proximity_system = Managers.state.entity:system("proximity_system")
+	local t = Managers.time:time("game")
 
-	for enemy_unit, _ in pairs(proximity_system.special_unit_extension_map) do
-		if ALIVE[enemy_unit] and not permanently_marked_enemies[enemy_unit] then
-			local ping_extension = ScriptUnit.has_extension(enemy_unit, "ping_system")
+	for enemy_unit, _ in pairs(proximity_system.ai_unit_extensions_map) do
+		if ALIVE[enemy_unit] then
+			if marked_enemies[enemy_unit] then
+				marked_enemies[enemy_unit].expire_t = t + PING_DURATION
+			else
+				local ping_extension = ScriptUnit.has_extension(enemy_unit, "ping_system")
 
-			if ping_extension then
-				ping_extension:set_pinged(true, false, owner_unit, true)
+				if ping_extension then
+					ping_extension:set_pinged(true, false, attacker_unit, true)
 
-				local buff_extension = ScriptUnit.has_extension(enemy_unit, "buff_system")
-
-				if buff_extension then
-					buff_extension:add_buff("defence_debuff_enemies", {
-						external_optional_duration = PERMANENT_DURATION,
-					})
-
-					if has_templars_knowledge then
-						buff_extension:add_buff("victor_witchhunter_improved_damage_taken_ping", {
-							external_optional_duration = PERMANENT_DURATION,
-						})
-					end
+					marked_enemies[enemy_unit] = {
+						owner_unit = attacker_unit,
+						expire_t = t + PING_DURATION,
+					}
 				end
+			end
 
-				permanently_marked_enemies[enemy_unit] = true
+			if Managers.state.network.is_server then
+				local buff_system = Managers.state.entity:system("buff_system")
+
+				buff_system:add_buff_synced(enemy_unit, "defence_debuff_enemies", BuffSyncType.All, {
+					external_optional_duration = PING_DURATION,
+				})
+
+				if has_templars_knowledge then
+					buff_system:add_buff_synced(enemy_unit, "victor_witchhunter_improved_damage_taken_ping", BuffSyncType.All, {
+						external_optional_duration = PING_DURATION,
+					})
+				end
 			end
 		end
 	end
 end)
 
--- Prune dead units so this table doesn't grow unbounded over a long level
+-- visual
 mod:hook_safe(IngameHud, "update", function (self)
-	for enemy_unit, _ in pairs(permanently_marked_enemies) do
-		if not ALIVE[enemy_unit] then
-			permanently_marked_enemies[enemy_unit] = nil
+	local t = Managers.time:time("game")
+
+	for enemy_unit, data in pairs(marked_enemies) do
+		if not ALIVE[enemy_unit] or t >= data.expire_t then
+			if ALIVE[enemy_unit] then
+				local ping_extension = ScriptUnit.has_extension(enemy_unit, "ping_system")
+
+				if ping_extension then
+					ping_extension:set_pinged(false, nil, data.owner_unit, true)
+				end
+			end
+
+			marked_enemies[enemy_unit] = nil
 		end
 	end
 end)
