@@ -214,7 +214,11 @@ DamageProfileTemplates.arrow_carbine.default_target.boost_curve_coefficient_head
 DamageProfileTemplates.arrow_sniper_kruber.critical_strike.attack_armor_power_modifer = { 1, 1, 1, 1, 0.75, 0.5 }
 
 -- Blunderbuss Bash Nerf
-Weapons.blunderbuss_template_1.actions.action_two.default.push_radius = 0.9 -- 2.5
+Weapons.blunderbuss_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
+Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
+Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
+
+-- Test Bash Nerf 2.0
 
 
 
@@ -333,7 +337,7 @@ NewDamageProfileTemplates.masterwork_pistol_shot = {
 }
 
 -- Grudgeraker Bash Nerf
-Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 0.9 -- 2.5
+--Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 0.9 -- 2.5
 
 
 
@@ -710,7 +714,7 @@ Weapons.wh_deus_01_template_1.actions.action_one.default.barrels = balanced_barr
 DamageProfileTemplates.shot_duckfoot.cleave_distribution.attack = 0.05
 DamageProfileTemplates.shot_duckfoot.cleave_distribution.impact = 0.05
 -- Bash nerf
-Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 0.9 -- 2.5
+--Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 0.9 -- 2.5
 
 -- Brace of Pistols buff
 Weapons.brace_of_pistols_template_1.ammo_data.max_ammo = 50

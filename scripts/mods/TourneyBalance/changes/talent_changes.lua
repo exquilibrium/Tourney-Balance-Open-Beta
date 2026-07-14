@@ -2082,59 +2082,22 @@ mod:add_text("kerillian_thorn_sister_debuff_wall_desc_2", "Thornwake instead cau
 	WHC Talents
 
 ]]
--- Templar's Knowledge: double the duration of the increased damage taken debuff
+
+-- Templar's Knowledge
+-- 1. Team-wide +5% damage-taken debuff, extended from 5s to 15s (unchanged effect, longer duration)
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_improved_damage_taken_ping", {
 	duration = 15, -- 5
 })
+
+-- 2. Victor personally deals +25% damage to enemies currently marked by Witch Hunt (only him, not the team)
+-- SEE thp_stagger_changes.lua
+
+-- 3. Updated tooltip covering all effects
 mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes tagged enemies to take an additional 5%% damage (for 15 seconds). Victors pings now last 30 seconds")
-mod:hook_origin(PingSystem, "_update_server", function (self, context, t)
-	local PING_DURATION = 15
-	local SELF_PING_DURATION = 5
-	local VERSUS_ENEMY_PING_DURATION = 5
-
-	for pinger_unit, data in pairs(self._pinged_units) do
-		local pinged_unit = data.pinged_unit
-
-		if ALIVE[pinged_unit] then
-			if ALIVE[pinger_unit] then
-				local start_time = data.start_time
-
-				if pinger_unit == pinged_unit and t >= start_time + SELF_PING_DURATION then
-					self:_remove_ping(pinger_unit)
-				end
-
-				if self._current_mechanism_name == "versus" and data.ping_type == PingTypes.ENEMY_GENERIC then
-					if t >= start_time + VERSUS_ENEMY_PING_DURATION then
-						self:_remove_ping(pinger_unit)
-					end
-				else
-					local duration = PING_DURATION
-					local talent_extension = ScriptUnit.has_extension(pinger_unit, "talent_system")
-
-					if talent_extension and talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping") then
-						duration = 30
-					end
-
-					if t >= start_time + duration then
-						self:_remove_ping(pinger_unit)
-					end
-				end
-			else
-				self:_remove_ping(pinger_unit)
-			end
-		elseif data.position then
-			if t >= data.start_time + PING_DURATION then
-				self:_remove_ping(pinger_unit)
-			end
-		else
-			self:_remove_ping(pinger_unit)
-		end
-	end
-end)
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes tagged enemies to take an additional 5%% damage for 15 seconds. Victor deals 25%% increased damage to marked enemies.")
 
 -- I Shall Judge You All
 --[[
@@ -2143,15 +2106,15 @@ end)
 
 ]]
 
--- I Shall Judge You All: also tags every special on the map when Animosity is used
+-- I Shall Judge You All: permanently tags & debuffs every pingable enemy on the level when Animosity is used
 mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity and tags every special enemy.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity and tags all enemies permanently.")
 
-local SPECIAL_PING_DURATION = 15
-local pinged_specials = {}
+local PERMANENT_DURATION = 900
+local permanently_marked_enemies = {}
 
 mod:hook_safe(CareerAbilityWHCaptain, "_run_ability", function (self)
 	local owner_unit = self._owner_unit
@@ -2161,52 +2124,41 @@ mod:hook_safe(CareerAbilityWHCaptain, "_run_ability", function (self)
 		return
 	end
 
-	local special_ping_duration = SPECIAL_PING_DURATION
-
-	if talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping") then
-		special_ping_duration = 30
-	end
-
+	local has_templars_knowledge = talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping")
 	local proximity_system = Managers.state.entity:system("proximity_system")
-	local t = Managers.time:time("game")
 
-	for special_unit, _ in pairs(proximity_system.special_unit_extension_map) do
-		if ALIVE[special_unit] then
-			if pinged_specials[special_unit] then
-				-- already tagged by this feature, just refresh its timer
-				pinged_specials[special_unit].expire_t = t + special_ping_duration
-			else
-				local ping_extension = ScriptUnit.has_extension(special_unit, "ping_system")
+	for enemy_unit, _ in pairs(proximity_system.special_unit_extension_map) do
+		if ALIVE[enemy_unit] and not permanently_marked_enemies[enemy_unit] then
+			local ping_extension = ScriptUnit.has_extension(enemy_unit, "ping_system")
 
-				if ping_extension then
-					ping_extension:set_pinged(true, false, owner_unit, true)
+			if ping_extension then
+				ping_extension:set_pinged(true, false, owner_unit, true)
 
-					pinged_specials[special_unit] = {
-						owner_unit = owner_unit,
-						expire_t = t + special_ping_duration,
-					}
+				local buff_extension = ScriptUnit.has_extension(enemy_unit, "buff_system")
+
+				if buff_extension then
+					buff_extension:add_buff("defence_debuff_enemies", {
+						external_optional_duration = PERMANENT_DURATION,
+					})
+
+					if has_templars_knowledge then
+						buff_extension:add_buff("victor_witchhunter_improved_damage_taken_ping", {
+							external_optional_duration = PERMANENT_DURATION,
+						})
+					end
 				end
+
+				permanently_marked_enemies[enemy_unit] = true
 			end
 		end
 	end
 end)
 
--- IngameHud.update runs every frame client-side; piggybacking on it lets us
--- expire our manual pings without clobbering mod.update (already used elsewhere in this mod)
+-- Prune dead units so this table doesn't grow unbounded over a long level
 mod:hook_safe(IngameHud, "update", function (self)
-	local t = Managers.time:time("game")
-
-	for special_unit, data in pairs(pinged_specials) do
-		if not ALIVE[special_unit] or t >= data.expire_t then
-			if ALIVE[special_unit] then
-				local ping_extension = ScriptUnit.has_extension(special_unit, "ping_system")
-
-				if ping_extension then
-					ping_extension:set_pinged(false, nil, data.owner_unit, true)
-				end
-			end
-
-			pinged_specials[special_unit] = nil
+	for enemy_unit, _ in pairs(permanently_marked_enemies) do
+		if not ALIVE[enemy_unit] then
+			permanently_marked_enemies[enemy_unit] = nil
 		end
 	end
 end)

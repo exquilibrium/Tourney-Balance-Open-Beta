@@ -605,6 +605,19 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 		end
 	end
 
+	-- Templar's Knowledge: Victor deals +25% damage to enemies currently marked by Witch Hunt
+	if calculated_damage and calculated_damage > 0 and attacker_unit and target_unit then
+		local attacker_talent_extension = ScriptUnit.has_extension(attacker_unit, "talent_system")
+
+		if attacker_talent_extension and attacker_talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping") then
+			local target_buff_extension = ScriptUnit.has_extension(target_unit, "buff_system")
+
+			if target_buff_extension and target_buff_extension:has_buff_type("defence_debuff_enemies") then
+				calculated_damage = calculated_damage * 1.25
+			end
+		end
+	end
+
 	return calculated_damage
 end)
 

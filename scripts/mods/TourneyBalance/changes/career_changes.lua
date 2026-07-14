@@ -459,6 +459,7 @@ mod:hook_origin(ActionTrueFlightBow, "client_owner_start_action", function (self
 end)
 
 --Removed bloodshot and ult interaction
+--[[ --Deprecation Check
 mod:hook_origin(ActionCareerWEWaywatcher, "client_owner_post_update", function (self, dt, t, world, can_damage)
     local current_action = self.current_action
 
@@ -501,6 +502,7 @@ mod:hook_origin(ActionCareerWEWaywatcher, "client_owner_post_update", function (
 		end
 	end
 end)
+]]
 
 mod:add_proc_function("kerillian_waywatcher_consume_extra_shot_buff", function (player, buff, params)
     local is_career_skill = params[5]
