@@ -645,6 +645,7 @@ DamageProfileTemplates.arrow_sniper_trueflight = {
 DamageProfileTemplates.arrow_sniper_ability_piercing.friendly_fire_multiplier = 0.25
 
 -- Piercing Shot pinpoint accuracy (career skill only, base Longbow untouched)
+--[[
 Weapons.kerillian_waywatcher_career_skill_weapon_piercing_shot.crosshair_style = "dot"
 Weapons.kerillian_waywatcher_career_skill_weapon_piercing_shot.default_spread_template = "tb_piercing_shot"
 SpreadTemplates.tb_piercing_shot = {
@@ -694,7 +695,7 @@ SpreadTemplates.tb_piercing_shot = {
     },
 } 
 Weapons.kerillian_waywatcher_career_skill_weapon_piercing_shot.default_spread_template = "tb_piercing_shot"
-
+]]
 
 
 -- Bloodrazor Thicket 

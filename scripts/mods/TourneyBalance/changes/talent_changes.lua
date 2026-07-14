@@ -2121,7 +2121,7 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%%. Victor deals 25.0% more damage to enemies affected by Witch Hunt (except Specials, Bosses and Lords).")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%%. Victor deals 25.0% more direct damage to enemies affected by Witch Hunt (except Specials, Bosses and Lords).")
 
 -- I Shall Judge You All
 --[[
