@@ -2104,7 +2104,7 @@ mod:modify_talent("wh_captain", 6, 2, {
 	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds. No longer affects teammates and ranged attacks.")
+mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 12 seconds. No longer affects teammates and ranged attacks.")
 
 
 
@@ -2116,7 +2116,7 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Victor deals 25.0% more direct damage to tagged enemies (except Lords and Bosses).")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Victor deals 25.0% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
 
 
 
@@ -2125,7 +2125,7 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Reveal and apply Witch Hunt to all taggable enemies and those hit by Animosity. Victor deals 25.0% more direct damage to all enemies.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all taggable enemies and those hit by Animosity. Victor deals 25.0% more direct damage to all enemies.")
 
 local PING_DURATION = 1500
 local marked_enemies = {}
