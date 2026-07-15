@@ -2097,7 +2097,7 @@ mod:add_text("victor_witchhunter_guaranteed_crit_on_timed_block_desc_new", "Bloc
 
 -- Fervency: extend guaranteed melee crit from 6s to 10s
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_activated_ability_guaranteed_crit_self_buff", {
-	duration = 10, -- 6
+	duration = 12, -- 6
 })
 
 mod:modify_talent("wh_captain", 6, 2, {
@@ -2107,28 +2107,18 @@ mod:modify_talent("wh_captain", 6, 2, {
 mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds. No longer affects teammates and ranged attacks.")
 
 
--- Templar's Knowledge
--- 1. Team-wide +5% damage-taken debuff, extended from 5s to 15s (unchanged effect, longer duration)
+
+-- Templar's Knowledge ### SEE thp_stagger_changes.lua
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_improved_damage_taken_ping", {
 	duration = 15, -- 5
 })
-
--- 2. Victor personally deals +25% damage to enemies currently marked by Witch Hunt (only him, not the team)
--- SEE thp_stagger_changes.lua
-
--- 3. Updated tooltip covering all effects
 mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
 mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Victor deals 25.0% more direct damage to tagged enemies (except Lords and Bosses).")
 
--- I Shall Judge You All
---[[
 
-	Witch Hunter Captain
-
-]]
 
 -- I Shall Judge You All: permanently tags & debuffs every pingable enemy on the level when Animosity is used
 mod:modify_talent("wh_captain", 6, 1, {
