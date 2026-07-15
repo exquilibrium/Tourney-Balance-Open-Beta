@@ -2125,7 +2125,7 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all taggable enemies and those hit by Animosity. Victor deals 25.0% more direct damage to all enemies.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all taggable enemies and those hit by Animosity. Victor deals 25.0% more direct damage to Infantry, Boss and Lords.")
 
 local PING_DURATION = 1500
 local marked_enemies = {}
