@@ -613,7 +613,10 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 			local is_direct_hit = not (damage_profile and (damage_profile.is_dot or damage_profile.is_explosion))
 			if is_direct_hit then
 				local target_buff_extension = ScriptUnit.has_extension(target_unit, "buff_system")
-				if target_buff_extension and target_buff_extension:has_buff_type("defence_debuff_enemies") and (not (breed and (breed.boss or breed.special)) or attacker_talent_extension:has_talent("victor_captain_activated_ability_stagger_ping_debuff")) then -- only allow breed.elite
+				if target_buff_extension and target_buff_extension:has_buff_type("defence_debuff_enemies") and not (breed and breed.boss) then-- only breed.elite and breed.special
+					calculated_damage = calculated_damage * 1.25
+				end
+				if target_buff_extension and attacker_talent_extension:has_talent("victor_captain_activated_ability_stagger_ping_debuff") then
 					calculated_damage = calculated_damage * 1.25
 				end
 			end
