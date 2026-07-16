@@ -1521,7 +1521,7 @@ mod:hook_safe(PlayerProjectileUnitExtension, "init", function (self, extension_i
 end)
 -- 
 
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Each bounce increases the power of thhe projectile by 20.0%% and hitting an enemy after a bounce refunds 1 ammo.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Bounced projectiles have 50.0%% more power and refunds 1 ammo when hitting an enemy.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1588,11 +1588,13 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 
 		DamageUtils.buff_on_attack(owner_unit, hit_unit, charge_value, is_critical_strike, hit_zone_name, num_targets_hit, send_to_server, buff_type, unmodified, self.item_name)
 
-		-- Ricochet: power increase on hits that occur after a bounce.
+		-- Ricochet: power increase on hits that occur after a bounce. 
+		-- Exclude AOE and DOT.
 		local original_power_level = self.power_level
+		local applies_dot = damage_profile.default_target and damage_profile.default_target.dot_template_name
 
-		if has_ricochet_talent and self._num_bounces > 0 and not aoe_data then
-			self.power_level = original_power_level * (1 + 0.2 * self._num_bounces)
+		if has_ricochet_talent and self._num_bounces > 0 and not aoe_data and not applies_dot then
+			self.power_level = original_power_level * 1.5
 		end
 
 		shield_blocked, forced_penetration = self:hit_enemy_damage(damage_profile, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
@@ -1704,36 +1706,10 @@ ProcFunctions.kerillian_waywatcher_reduce_activated_ability_cooldown = function 
             local career_extension = ScriptUnit.extension(owner_unit, "career_system")
 
             career_extension:reduce_activated_ability_cooldown_percent(buff.multiplier)
-
-            -- 1 ammo refund on headshot with Piercing Shot.
-			--[[
-            local weapon_slot = "slot_ranged"
-            local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
-            local slot_data = inventory_extension:get_slot_data(weapon_slot)
-            local right_unit_1p = slot_data.right_unit_1p
-            local left_unit_1p = slot_data.left_unit_1p
-            local ammo_extension = GearUtils.get_ammo_extension(right_unit_1p, left_unit_1p)
-
-            if ammo_extension then
-                ammo_extension:add_ammo_to_reserve(1)
-            end
-			]]
         end
     end
 end
 
--- Piercing Shot no aim punch
---[[
-mod:add_text("kerillian_waywatcher_activated_ability_piercing_shot_desc", "Trueshot Volley fires one pinpoint accurate piercing shot dealing heavy damage. Headshot refunds 100.0%% cooldown and 1 ammo.")
-mod:modify_talent("we_waywatcher", 6, 1, {
-    num_ranks = 1,
-	description = "kerillian_waywatcher_activated_ability_piercing_shot_desc",
-    description_values = {},
-    buffs = {
-		"kerillian_waywatcher_activated_ability_piercing_shot",
-    },
-})
-]]
 
 -- Kurnous' Reward ammo refund nerf
 mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_activated_ability_restore_ammo_on_career_skill_special_kill", {
@@ -2045,60 +2021,38 @@ mod:add_text("kerillian_shade_activated_stealth_combo_desc_tb", "Leaving Infiltr
 
 ]]
 
---[[
--- Trigger on regular ult. Stacks 3 times.
-mod:add_text("sister_inheritance_desc", "Consumin Radiance of Thornwake grants the party 15% power and 5% critical strike chance for 10 seconds. Can stack 2 times.")
+-- Radiant Inheritance
+-- extended duration: local function must be declared before the modify_talent_buff_template
+local radiant_thorn_stack_count = {}
+local function tb_radiant_thorn_duration_modifier(unit, sub_buff_template, duration, buff_extension, params)
+	local is_active = buff_extension:has_buff_type("kerillian_thorn_sister_team_buff_aura")
+	local current_count = radiant_thorn_stack_count[unit] or 0
+	local new_count = math.min(is_active and current_count + 1 or 1, 2)
+
+	radiant_thorn_stack_count[unit] = new_count
+
+	return duration * new_count
+end
+
+-- longer duration for radiant inheritance
+mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_sister_team_buff_aura", {
+	duration = 10,
+	max_stacks = 2,
+	refresh_durations = true,
+	duration_modifier_func = tb_radiant_thorn_duration_modifier,
+})
+
+-- trigger radiant inheritance on regular ult too, not just extra-charge uses
+mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_sister_passive_team_buff", {
+	event = "on_ability_cooldown_started"
+})
+
 mod:modify_talent("we_thornsister", 4, 3, {
-    buffs = {
-        "tb_radiant_thorn"
-    },
     description = "sister_inheritance_desc",
     description_values = {},
 })
-mod:add_talent_buff_template("wood_elf", "tb_radiant_thorn", {
-	buff_func = "tb_radiant_thorn_grant_team",
-	event = "on_ability_cooldown_started",
-})
-mod:add_proc_function("tb_radiant_thorn_grant_team", function (owner_unit, buff, params)
-	if not Managers.state.network.is_server then
-		return
-	end
 
-	local side = Managers.state.side.side_by_unit[owner_unit]
-
-	if not side then
-		return
-	end
-
-	local buff_system = Managers.state.entity:system("buff_system")
-	local player_and_bot_units = side.PLAYER_AND_BOT_UNITS
-
-	for i = 1, #player_and_bot_units do
-		local unit = player_and_bot_units[i]
-
-		if Unit.alive(unit) then
-			-- Not server-controlled: BuffSystem._add_buff_helper_function hard-asserts
-			-- that server-controlled buffs cannot have a "duration" field, which this one
-			-- does. A normal (non-server-controlled) add still applies to any target unit,
-			-- it just skips the server_buff_id bookkeeping we don't need since duration
-			-- handles expiry on its own.
-			buff_system:add_buff(unit, "kerillian_thorn_passive_team_buff", owner_unit, false)
-		end
-	end
-end)
--- No refresh_durations: each cast adds an independent stack with its own timer, so
--- stacks expire one at a time (2 -> 1 -> 0) instead of all resetting/expiring together.
-mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_passive_team_buff", {
-	{
-		duration = 10,
-		max_stacks = 2,
-	},
-	{
-		duration = 10,
-		max_stacks = 2,
-	},
-})
-]]
+mod:add_text("sister_inheritance_desc", "Consuming Radiance or Thornwake grants Kerillian and nearby allies 15% power and 5% critical strike chance for 10 seconds. Duration can stack 2 times.")
 
 -- shorter cd for burst ult
 mod:modify_talent("we_thornsister", 6, 3, {
@@ -2140,7 +2094,7 @@ mod:modify_talent("wh_captain", 2, 1, {
 mod:add_text("victor_witchhunter_guaranteed_crit_on_timed_block_desc_new", "Blocking just as an enemy attack is about to hit causes your next melee or ranged attack within 2 seconds to be a guaranteed critical hit.")
 
 
--- Fervency: extend guaranteed melee crit from 6s to 12s
+-- Fervency: extend guaranteed melee crit from 6s to 12s and 24 melee crit stacks
 
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_activated_ability_guaranteed_crit_self_buff", {
 	duration = 12, -- 6
@@ -2150,8 +2104,6 @@ mod:modify_talent("wh_captain", 6, 2, {
 	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
 	description_values = {},
 })
--- mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 12 seconds. No longer affects teammates and ranged attacks.")
-
 
 -- Fervency: additionally grants 12 stacks of guaranteed melee crit on ult use
 mod:add_talent_buff_template("witch_hunter", "tb_fervency_crit_stacks", {
