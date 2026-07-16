@@ -1521,7 +1521,7 @@ mod:hook_safe(PlayerProjectileUnitExtension, "init", function (self, extension_i
 end)
 -- 
 
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Bounced projectiles have 50.0%% more power and refunds 1 ammo when hitting an enemy.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Bounced projectiles have 10.0%% more power and refunds 1 ammo when hitting an enemy.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1594,7 +1594,7 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 		local applies_dot = damage_profile.default_target and damage_profile.default_target.dot_template_name
 
 		if has_ricochet_talent and self._num_bounces > 0 and not aoe_data and not applies_dot then
-			self.power_level = original_power_level * 1.5
+			self.power_level = original_power_level * 1.1
 		end
 
 		shield_blocked, forced_penetration = self:hit_enemy_damage(damage_profile, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
