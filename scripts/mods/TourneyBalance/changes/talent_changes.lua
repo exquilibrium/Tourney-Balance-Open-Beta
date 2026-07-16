@@ -2159,7 +2159,7 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all taggable enemies and those hit by Animosity. Victor deals 25.0% more direct damage to Infantry, Boss and Lords.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all specials and enemies hit by Animosity. Victor deals 25.0% more direct damage to Infantry, Boss and Lords.")
 
 local PING_DURATION = 150
 local marked_enemies = {}
@@ -2183,9 +2183,23 @@ mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, i
 	local has_templars_knowledge = talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping")
 	local proximity_system = Managers.state.entity:system("proximity_system")
 	local t = Managers.time:time("game")
+	local ult_radius = explosion_template.explosion.radius or 10
+	local nearby_enemy_units = FrameTable.alloc_table()
+
+	Broadphase.query(proximity_system.enemy_broadphase, impact_position, ult_radius, nearby_enemy_units)
+
+	local hit_by_ult = {}
+
+	for i = 1, #nearby_enemy_units do
+		hit_by_ult[nearby_enemy_units[i]] = true
+	end
 
 	for enemy_unit, _ in pairs(proximity_system.ai_unit_extensions_map) do
-		if ALIVE[enemy_unit] then
+		local is_hit_by_ult = hit_by_ult[enemy_unit]
+		local breed = not is_hit_by_ult and Unit.get_data(enemy_unit, "breed")
+		local is_special = breed and breed.special
+
+		if ALIVE[enemy_unit] and (is_hit_by_ult or is_special) then
 			if marked_enemies[enemy_unit] then
 				marked_enemies[enemy_unit].expire_t = t + PING_DURATION
 			else
