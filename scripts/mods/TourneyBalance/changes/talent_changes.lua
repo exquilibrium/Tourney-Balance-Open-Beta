@@ -309,7 +309,6 @@ mod:add_talent_buff_template("empire_soldier", "mercenary_helborgs_tutelage_crit
 	{
 		event = "on_hit",
 		icon = "markus_mercenary_crit_count",
-		buff_func = "dummy_function",
 		remove_on_proc = true,
 		max_stacks = 1,
 		stat_buff = "critical_strike_chance",
@@ -1340,7 +1339,7 @@ mod:add_text("bardin_engineer_melee_power_ranged_power_desc", "Melee Power is in
 mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_passive", {
     update_func = "gs_update_kerillian_waywatcher_regen"
 })
-mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health when below 50.0% health and 3% ammo every 10 seconds. This does not replace temp health.")
+mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health when below 50.0% health and 1 ammo every 10 seconds. This does not replace temp health.")
 mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 100%%. Health regeneration caps at 100%%. No longer restores ammo.")
 mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% every tick.")
 mod:add_text("kerillian_waywatcher_group_regen_desc", "Amaranthe's health regeneration also affects the other members of the party.")
@@ -1371,9 +1370,9 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
 				local ammo_extension = right_hand_ammo_extension or left_hand_ammo_extension
 
 				if ammo_extension then
-					local ammo_bonus_fraction = 0.03 -- ammo regen here
-					local ammo_amount = math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
-
+					--local ammo_bonus_fraction = 0.03 -- ammo regen here
+					--local ammo_amount = math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
+					local ammo_amount = 1
 					ammo_extension:add_ammo_to_reserve(ammo_amount)
 				end
 			end
@@ -1507,8 +1506,22 @@ mod:modify_talent("we_waywatcher", 5, 1, {
 mod:add_text("elf_ws_movement_speed_on_special_kill_desc", "Killing a special or elite enemy increases movement speed by 15.0% and lets Kerillian pass through enemies for 10 seconds.")
 
 
--- Richochet
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Each bounce increases the power of projectile by 20%% and refunds 1 ammo when hitting an enemy after a bounce.")
+-- Richochet BUFFS
+-- Prevent extra arrow from Bloodshot to trigger ammo refund
+local pending_bonus_shot = {}
+mod:hook(ActionBow, "fire", function (func, self, current_action, add_spread)
+	pending_bonus_shot[self.owner_unit] = add_spread == false
+
+	func(self, current_action, add_spread) -- ActionBow.fire's "add_spread" is false only for that bonus arrow
+
+	pending_bonus_shot[self.owner_unit] = nil
+end)
+mod:hook_safe(PlayerProjectileUnitExtension, "init", function (self, extension_init_context, unit, extension_init_data)
+	self._is_bonus_shot = pending_bonus_shot[extension_init_data.owner_unit] or false
+end)
+-- 
+
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Each bounce increases the power of thhe projectile by 20.0%% and hitting an enemy after a bounce refunds 1 ammo.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1539,7 +1552,7 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 		local left_unit_1p = slot_data.left_unit_1p
 		local ammo_extension = GearUtils.get_ammo_extension(right_unit_1p, left_unit_1p)
 
-		if ammo_extension and self._num_bounces > 0 then
+		if ammo_extension and self._num_bounces > 0 and not self._is_bonus_shot then
 			ammo_extension:add_ammo_to_reserve(ammo_amount)
 		end
 	end
@@ -2032,28 +2045,60 @@ mod:add_text("kerillian_shade_activated_stealth_combo_desc_tb", "Leaving Infiltr
 
 ]]
 
--- longer duration for radiant inheritance and trigger on regular ult
---mod:modify_talent_buff_template("wood_elf", "victor_bountyhunter_activated_ability_railgun_delayed_add", {
- --   event = "on_ability_activated"
---})
+--[[
+-- Trigger on regular ult. Stacks 3 times.
+mod:add_text("sister_inheritance_desc", "Consumin Radiance of Thornwake grants the party 15% power and 5% critical strike chance for 10 seconds. Can stack 2 times.")
 mod:modify_talent("we_thornsister", 4, 3, {
     buffs = {
         "tb_radiant_thorn"
-    }
-})
-mod:add_talent_buff_template("wood_elf", "tb_radiant_thorn", {
-	buff_func = "add_buff",
-	buff_to_add = "kerillian_thorn_sister_team_buff_aura",
-	event = "on_ability_activated",
-})
-mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_sister_team_buff_aura", {
-	duration = 20
-})
-mod:modify_talent("we_thornsister", 4, 3, {
+    },
     description = "sister_inheritance_desc",
     description_values = {},
 })
-mod:add_text("sister_inheritance_desc", "Using her career ability grants Kerillian and nearby allies 15% power and 5% critical strike chance for 20 seconds.")
+mod:add_talent_buff_template("wood_elf", "tb_radiant_thorn", {
+	buff_func = "tb_radiant_thorn_grant_team",
+	event = "on_ability_cooldown_started",
+})
+mod:add_proc_function("tb_radiant_thorn_grant_team", function (owner_unit, buff, params)
+	if not Managers.state.network.is_server then
+		return
+	end
+
+	local side = Managers.state.side.side_by_unit[owner_unit]
+
+	if not side then
+		return
+	end
+
+	local buff_system = Managers.state.entity:system("buff_system")
+	local player_and_bot_units = side.PLAYER_AND_BOT_UNITS
+
+	for i = 1, #player_and_bot_units do
+		local unit = player_and_bot_units[i]
+
+		if Unit.alive(unit) then
+			-- Not server-controlled: BuffSystem._add_buff_helper_function hard-asserts
+			-- that server-controlled buffs cannot have a "duration" field, which this one
+			-- does. A normal (non-server-controlled) add still applies to any target unit,
+			-- it just skips the server_buff_id bookkeeping we don't need since duration
+			-- handles expiry on its own.
+			buff_system:add_buff(unit, "kerillian_thorn_passive_team_buff", owner_unit, false)
+		end
+	end
+end)
+-- No refresh_durations: each cast adds an independent stack with its own timer, so
+-- stacks expire one at a time (2 -> 1 -> 0) instead of all resetting/expiring together.
+mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_passive_team_buff", {
+	{
+		duration = 10,
+		max_stacks = 2,
+	},
+	{
+		duration = 10,
+		max_stacks = 2,
+	},
+})
+]]
 
 -- shorter cd for burst ult
 mod:modify_talent("we_thornsister", 6, 3, {
@@ -2095,7 +2140,8 @@ mod:modify_talent("wh_captain", 2, 1, {
 mod:add_text("victor_witchhunter_guaranteed_crit_on_timed_block_desc_new", "Blocking just as an enemy attack is about to hit causes your next melee or ranged attack within 2 seconds to be a guaranteed critical hit.")
 
 
--- Fervency: extend guaranteed melee crit from 6s to 10s
+-- Fervency: extend guaranteed melee crit from 6s to 12s
+
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_activated_ability_guaranteed_crit_self_buff", {
 	duration = 12, -- 6
 })
@@ -2104,7 +2150,43 @@ mod:modify_talent("wh_captain", 6, 2, {
 	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 12 seconds. No longer affects teammates and ranged attacks.")
+-- mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 12 seconds. No longer affects teammates and ranged attacks.")
+
+
+-- Fervency: additionally grants 12 stacks of guaranteed melee crit on ult use
+mod:add_talent_buff_template("witch_hunter", "tb_fervency_crit_stacks", {
+	icon = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff",
+	stat_buff = "critical_strike_chance_melee",
+	bonus = 1,
+	max_stacks = 24,
+})
+
+mod:add_talent_buff_template("witch_hunter", "tb_fervency_stack_provider", {
+	buff_func = "add_buff_reff_buff_stack",
+	buff_to_add = "tb_fervency_crit_stacks",
+	amount_to_add = 24,
+	event = "on_ability_activated",
+})
+
+mod:add_talent_buff_template("witch_hunter", "tb_fervency_stack_consumer", {
+	buff_func = "remove_buff_stack",
+	event = "on_melee_hit",
+	max_stacks = 1,
+	remove_buff_stack_data = {
+		{ buff_to_remove = "tb_fervency_crit_stacks", num_stacks = 1 },
+	},
+})
+
+mod:modify_talent("wh_captain", 6, 2, {
+	buffs = {
+		"tb_fervency_stack_provider",
+		"tb_fervency_stack_consumer"
+	},
+	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
+	description_values = {},
+})
+mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 12 seconds and grants 24 guaranteed melee critical strikes. No longer affects teammates and ranged attacks.")
+
 
 
 
@@ -2127,7 +2209,7 @@ mod:modify_talent("wh_captain", 6, 1, {
 })
 mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all taggable enemies and those hit by Animosity. Victor deals 25.0% more direct damage to Infantry, Boss and Lords.")
 
-local PING_DURATION = 1500
+local PING_DURATION = 150
 local marked_enemies = {}
 
 mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, impact_position, rotation, explosion_template, scale, damage_source, is_server, is_husk, damaging_unit, attacker_power_level, is_critical_strike, source_attacker_unit)

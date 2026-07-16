@@ -459,51 +459,6 @@ mod:hook_origin(ActionTrueFlightBow, "client_owner_start_action", function (self
 end)
 
 --Removed bloodshot and ult interaction
---[[ --Deprecation Check
-mod:hook_origin(ActionCareerWEWaywatcher, "client_owner_post_update", function (self, dt, t, world, can_damage)
-    local current_action = self.current_action
-
-	if self.state == "waiting_to_shoot" and self.time_to_shoot <= t then
-		self.state = "shooting"
-	end
-
-	if self.state == "shooting" then
-		local has_extra_shots = self:_update_extra_shots(self.owner_buff_extension, 1)
-		local add_spread = not self.extra_buff_shot
-
-		self:fire(current_action, add_spread)
-
-		if has_extra_shots and has_extra_shots > 1 then
-			self.state = "waiting_to_shoot"
-			self.time_to_shoot = t + 0.1
-			self.extra_buff_shot = true
-		else
-			self.state = "shot"
-		end
-
-		local first_person_extension = self.first_person_extension
-
-		if self.current_action.reset_aim_on_attack then
-			first_person_extension:reset_aim_assist_multiplier()
-		end
-
-		local fire_sound_event = self.current_action.fire_sound_event
-
-		if fire_sound_event then
-			local play_on_husk = self.current_action.fire_sound_on_husk
-
-			first_person_extension:play_hud_sound_event(fire_sound_event, nil, play_on_husk)
-		end
-
-		if self.current_action.extra_fire_sound_event then
-			local position = POSITION_LOOKUP[self.owner_unit]
-
-			WwiseUtils.trigger_position_event(self.world, self.current_action.extra_fire_sound_event, position)
-		end
-	end
-end)
-]]
-
 mod:add_proc_function("kerillian_waywatcher_consume_extra_shot_buff", function (player, buff, params)
     local is_career_skill = params[5]
     local should_consume_shot = nil
