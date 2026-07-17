@@ -1523,7 +1523,7 @@ mod:hook_safe(PlayerProjectileUnitExtension, "init", function (self, extension_i
 end)
 -- 
 
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Bounced projectiles have a 10.0%% chance to become critical strikes and refund 1 ammo when hitting an enemy.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. When below 10 ammo bounced projectiles refund 1 ammo when hitting an enemy.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1536,27 +1536,6 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 
 	if not breed then
 		return
-	end
-
-	-- Ricochet talent effects (ammo refund + double damage) only apply if the
-	-- owner actually has the talent -- other characters can also have bouncing projectiles.
-	local owner_unit = self._owner_unit
-	local talent_extension = ScriptUnit.has_extension(owner_unit, "talent_system")
-	local has_ricochet_talent = talent_extension and talent_extension:has_talent("kerillian_waywatcher_projectile_ricochet")
-
-	-- 1 ammo refund when hit after ricochet.
-	if ALIVE[owner_unit] and has_ricochet_talent then
-		local weapon_slot = "slot_ranged"
-		local ammo_amount = 1 --self._num_bounces
-		local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
-		local slot_data = inventory_extension:get_slot_data(weapon_slot)
-		local right_unit_1p = slot_data.right_unit_1p
-		local left_unit_1p = slot_data.left_unit_1p
-		local ammo_extension = GearUtils.get_ammo_extension(right_unit_1p, left_unit_1p)
-
-		if ammo_extension and self._num_bounces > 0 and not self._is_bonus_shot then
-			ammo_extension:add_ammo_to_reserve(ammo_amount)
-		end
 	end
 
 	local hit_zone_name
@@ -1574,17 +1553,31 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 		local num_targets_hit = self._num_targets_hit + 1
 		local unmodified = true
 
-		-- Ricochet: Reroll crit hits
-		-- Exclude AOE and DOT
-		local applies_dot = damage_profile.default_target and damage_profile.default_target.dot_template_name
-		local is_ricochet_direct_hit = not aoe_data and not applies_dot
-		if has_ricochet_talent and self._num_bounces > 0 and ricochet_direct_hit and not is_critical_strike then
-			local owner_buff_extension = ScriptUnit.has_extension(owner_unit, "buff_system")
-			local ricochet_bonus_crit_chance = 0.1 * self._num_bounces
+		-- Ricochet talent effects ammo refund + crits
+		if HEALTH_ALIVE[hit_unit] then
+			local owner_unit = self._owner_unit
+			local talent_extension = ScriptUnit.has_extension(owner_unit, "talent_system")
+			local has_ricochet_talent = talent_extension and talent_extension:has_talent("kerillian_waywatcher_projectile_ricochet")
 
-			if owner_buff_extension and owner_buff_extension:has_procced(ricochet_bonus_crit_chance, "kerillian_waywatcher_projectile_ricochet") then
-				is_critical_strike = true
-				self._is_critical_strike = true
+			-- 1 ammo refund when hit after ricochet.
+			if ALIVE[owner_unit] and has_ricochet_talent then
+				local weapon_slot = "slot_ranged"
+				local ammo_amount = 1 --self._num_bounces
+				local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
+				local slot_data = inventory_extension:get_slot_data(weapon_slot)
+				local right_unit_1p = slot_data.right_unit_1p
+				local left_unit_1p = slot_data.left_unit_1p
+				local ammo_extension = GearUtils.get_ammo_extension(right_unit_1p, left_unit_1p)
+
+				if ammo_extension and self._num_bounces > 0 and not self._is_bonus_shot then
+                    local current_clip = ammo_extension:ammo_count()
+                    local current_reserve = ammo_extension:remaining_ammo()
+                    local total_ammo = current_clip + current_reserve
+                    
+                    if total_ammo <= 10 then
+                        ammo_extension:add_ammo_to_reserve(ammo_amount)
+                    end
+                end
 			end
 		end
 
@@ -2102,7 +2095,7 @@ mod:add_text("victor_witchhunter_guaranteed_crit_on_timed_block_desc_new", "Bloc
 -- Fervency: extend guaranteed melee crit from 6s to 12s and 24 melee crit stacks
 
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_activated_ability_guaranteed_crit_self_buff", {
-	duration = 12, -- 6
+	duration = 10, -- 6
 })
 
 mod:modify_talent("wh_captain", 6, 2, {
@@ -2115,13 +2108,13 @@ mod:add_talent_buff_template("witch_hunter", "tb_fervency_crit_stacks", {
 	icon = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff",
 	stat_buff = "critical_strike_chance_melee",
 	bonus = 1,
-	max_stacks = 24,
+	max_stacks = 20,
 })
 
 mod:add_talent_buff_template("witch_hunter", "tb_fervency_stack_provider", {
 	buff_func = "add_buff_reff_buff_stack",
 	buff_to_add = "tb_fervency_crit_stacks",
-	amount_to_add = 24,
+	amount_to_add = 20,
 	event = "on_ability_activated",
 })
 
