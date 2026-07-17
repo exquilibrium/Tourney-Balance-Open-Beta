@@ -1380,8 +1380,8 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
 				if ammo_extension then
 					local ammo_amount = 1
 					if cooldown_talent then
-						local ammo_bonus_fraction = 0.05
-						ammo_amount = ammo_amount + math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
+						-- local ammo_bonus_fraction = 2.5
+						ammo_amount = ammo_amount + 1 -- math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
 					end
 					ammo_extension:add_ammo_to_reserve(ammo_amount)
 				end
