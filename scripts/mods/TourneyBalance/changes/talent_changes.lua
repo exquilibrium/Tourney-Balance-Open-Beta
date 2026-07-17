@@ -1341,7 +1341,7 @@ mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_passive", {
 })
 mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health when below 50.0% health and 1 ammo every 10 seconds. This does not replace temp health.")
 mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 100%%. Health regeneration caps at 100%%. No longer restores ammo.")
-mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% and restores additional 5.0%% ammo every tick. No longer restores health.")
+mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% and restores 1 additional ammo every tick. No longer restores health.")
 mod:add_text("kerillian_waywatcher_group_regen_desc", "Amaranthe's health regeneration also affects the other members of the party.")
 mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, buff, params)
     local t = params.t
@@ -2122,7 +2122,7 @@ mod:add_talent_buff_template("witch_hunter", "tb_fervency_stack_provider", {
 	buff_func = "add_buff_reff_buff_stack",
 	buff_to_add = "tb_fervency_crit_stacks",
 	amount_to_add = 24,
-	event = "on_ability_cooldown_started",
+	event = "on_ability_activated",
 })
 
 mod:add_talent_buff_template("witch_hunter", "tb_fervency_stack_consumer", {
