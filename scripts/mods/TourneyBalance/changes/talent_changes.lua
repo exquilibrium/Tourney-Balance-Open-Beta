@@ -1354,6 +1354,8 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
     local time_between_heals = buff_template.time_between_heals
 
     if next_heal_tick < t and Unit.alive(unit) then
+        local talent_extension = ScriptUnit.extension(unit, "talent_system")
+		
         local cooldown_talent = talent_extension:has_talent("kerillian_waywatcher_passive_cooldown_restore", "wood_elf", true)
 		if cooldown_talent then
 			local cooldown_reduction = 0.05
@@ -1363,7 +1365,6 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
 		end
 
 		-- Ammo Regen (if not Isha's Embrace)
-        local talent_extension = ScriptUnit.extension(unit, "talent_system")
 		if not talent_extension:has_talent("kerillian_waywatcher_improved_regen", "wood_elf", true) then
 			local weapon_slot = "slot_ranged"
 			local inventory_extension = ScriptUnit.extension(unit, "inventory_system")
