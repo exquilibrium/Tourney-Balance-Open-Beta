@@ -1341,7 +1341,7 @@ mod:modify_talent_buff_template("wood_elf", "kerillian_waywatcher_passive", {
 })
 mod:add_text("career_passive_desc_we_3a_2", "Kerillian regenerates 3 health when below 50.0% health and 1 ammo every 10 seconds. This does not replace temp health.")
 mod:add_text("kerillian_waywatcher_improved_regen_desc_2", "Increases Kerillian's health regenerated from Amaranthe by 100%%. Health regeneration caps at 100%%. No longer restores ammo.")
-mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% every tick.")
+mod:add_text("kerillian_waywatcher_passive_cooldown_restore_desc", "Amaranthe reduces the cooldown of Trueflight Volley by 5.0%% and restores additional 5.0%% ammo every tick. No longer restores health.")
 mod:add_text("kerillian_waywatcher_group_regen_desc", "Amaranthe's health regeneration also affects the other members of the party.")
 mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, buff, params)
     local t = params.t
@@ -1354,8 +1354,15 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
     local time_between_heals = buff_template.time_between_heals
 
     if next_heal_tick < t and Unit.alive(unit) then
+        local cooldown_talent = talent_extension:has_talent("kerillian_waywatcher_passive_cooldown_restore", "wood_elf", true)
+		if cooldown_talent then
+			local cooldown_reduction = 0.05
+			local career_extension = ScriptUnit.extension(unit, "career_system")
 
-		-- Ammo regen becomes base, when not ishas embrace
+			career_extension:reduce_activated_ability_cooldown_percent(cooldown_reduction)
+		end
+
+		-- Ammo Regen (if not Isha's Embrace)
         local talent_extension = ScriptUnit.extension(unit, "talent_system")
 		if not talent_extension:has_talent("kerillian_waywatcher_improved_regen", "wood_elf", true) then
 			local weapon_slot = "slot_ranged"
@@ -1370,30 +1377,24 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
 				local ammo_extension = right_hand_ammo_extension or left_hand_ammo_extension
 
 				if ammo_extension then
-					--local ammo_bonus_fraction = 0.03 -- ammo regen here
-					--local ammo_amount = math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
 					local ammo_amount = 1
+					if cooldown_talent then
+						local ammo_bonus_fraction = 0.05
+						ammo_amount = ammo_amount + math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
+					end
 					ammo_extension:add_ammo_to_reserve(ammo_amount)
 				end
 			end
 		end
 
-        local cooldown_talent = talent_extension:has_talent("kerillian_waywatcher_passive_cooldown_restore", "wood_elf", true)
-		if cooldown_talent then
-			local cooldown_reduction = 0.05
-			local career_extension = ScriptUnit.extension(unit, "career_system")
 
-			career_extension:reduce_activated_ability_cooldown_percent(cooldown_reduction)
-		end
-
-        -- if Managers.state.network.is_server and not cooldown_talent then
-        if Managers.state.network.is_server then
+        if Managers.state.network.is_server and not cooldown_talent then
             local health_extension = ScriptUnit.extension(unit, "health_system")
             local status_extension = ScriptUnit.extension(unit, "status_system")
             local heal_amount = buff_template.heal_amount
 
             if talent_extension:has_talent("kerillian_waywatcher_improved_regen", "wood_elf", true) then
-                regen_cap = 1
+                regen_cap = regen_cap * 2
                 heal_amount = heal_amount * 2
             end
 
@@ -1521,7 +1522,7 @@ mod:hook_safe(PlayerProjectileUnitExtension, "init", function (self, extension_i
 end)
 -- 
 
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Bounced projectiles have 10.0%% more power and refunds 1 ammo when hitting an enemy.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Bounced projectiles have a 10.0%% chance to become critical strikes and refund 1 ammo when hitting an enemy.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1572,6 +1573,20 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 		local num_targets_hit = self._num_targets_hit + 1
 		local unmodified = true
 
+		-- Ricochet: Reroll crit hits
+		-- Exclude AOE and DOT
+		local applies_dot = damage_profile.default_target and damage_profile.default_target.dot_template_name
+		local is_ricochet_direct_hit = not aoe_data and not applies_dot
+		if has_ricochet_talent and self._num_bounces > 0 and ricochet_direct_hit and not is_critical_strike then
+			local owner_buff_extension = ScriptUnit.has_extension(owner_unit, "buff_system")
+			local ricochet_bonus_crit_chance = 0.1 * self._num_bounces
+
+			if owner_buff_extension and owner_buff_extension:has_procced(ricochet_bonus_crit_chance, "kerillian_waywatcher_projectile_ricochet") then
+				is_critical_strike = true
+				self._is_critical_strike = true
+			end
+		end
+
 		if hit_zone_name ~= "head" and HEALTH_ALIVE[hit_unit] and breed and breed.hit_zones and breed.hit_zones.head then
 			local owner_buff_extension = ScriptUnit.has_extension(owner_unit, "buff_system")
 			local auto_headshot = owner_buff_extension and owner_buff_extension:has_buff_perk("auto_headshot")
@@ -1585,20 +1600,9 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 		end
 
 		local buff_type = DamageUtils.get_item_buff_type(self.item_name)
-
+		
 		DamageUtils.buff_on_attack(owner_unit, hit_unit, charge_value, is_critical_strike, hit_zone_name, num_targets_hit, send_to_server, buff_type, unmodified, self.item_name)
-
-		-- Ricochet: power increase on hits that occur after a bounce. 
-		-- Exclude AOE and DOT.
-		local original_power_level = self.power_level
-		local applies_dot = damage_profile.default_target and damage_profile.default_target.dot_template_name
-
-		if has_ricochet_talent and self._num_bounces > 0 and not aoe_data and not applies_dot then
-			self.power_level = original_power_level * 1.1
-		end
-
 		shield_blocked, forced_penetration = self:hit_enemy_damage(damage_profile, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
-		self.power_level = original_power_level -- reset power level from ricochet
 		allow_link = hit_zone_name ~= "ward"
 
 		if allow_link and breed and not shield_blocked then
@@ -2117,7 +2121,7 @@ mod:add_talent_buff_template("witch_hunter", "tb_fervency_stack_provider", {
 	buff_func = "add_buff_reff_buff_stack",
 	buff_to_add = "tb_fervency_crit_stacks",
 	amount_to_add = 24,
-	event = "on_ability_activated",
+	event = "on_ability_cooldown_started",
 })
 
 mod:add_talent_buff_template("witch_hunter", "tb_fervency_stack_consumer", {
@@ -2150,7 +2154,7 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Victor deals 25.0% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Victor deals 25.0%% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
 
 
 
@@ -2159,7 +2163,7 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all specials and enemies hit by Animosity. Victor deals 25.0% more direct damage to Infantry, Boss and Lords.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all specials and enemies hit by Animosity. Victor always deals 25.0%% more direct damage to Infantry, Boss and Lords.")
 
 local PING_DURATION = 150
 local marked_enemies = {}
