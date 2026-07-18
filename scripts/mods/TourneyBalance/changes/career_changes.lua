@@ -397,7 +397,7 @@ Weapons.kerillian_waywatcher_career_skill_weapon.actions.action_career_hold.prio
 }
 
 --Loaded Bow Buff
-mod:add_text("kerillian_waywatcher_activated_ability_additional_projectile_desc", "Trueflight Volley fires 2 additional arrows.")
+mod:add_text("kerillian_waywatcher_activated_ability_additional_projectile_desc", "Trueflight Volley fires 5 arrows.")
 mod:hook_origin(ActionTrueFlightBow, "client_owner_start_action", function (self, new_action, t, chain_action_data, power_level, action_init_data)
 	ActionTrueFlightBow.super.client_owner_start_action(self, new_action, t, chain_action_data, power_level, action_init_data)
 

@@ -1380,8 +1380,7 @@ mod:add_buff_function("gs_update_kerillian_waywatcher_regen", function (unit, bu
 				if ammo_extension then
 					local ammo_amount = 1
 					if cooldown_talent then
-						-- local ammo_bonus_fraction = 2.5
-						ammo_amount = ammo_amount + 1 -- math.max(math.round(ammo_extension:max_ammo() * ammo_bonus_fraction), 1)
+						ammo_amount = ammo_amount + 1
 					end
 					ammo_extension:add_ammo_to_reserve(ammo_amount)
 				end
@@ -1523,7 +1522,7 @@ mod:hook_safe(PlayerProjectileUnitExtension, "init", function (self, extension_i
 end)
 -- 
 
-mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. Bounced projectiles refund 1 ammo after hitting an enemy while below 10 ammo.")
+mod:add_text("kerillian_waywatcher_projectile_ricochet_desc", "Kerillian's arrows now ricochet, bouncing up to 3 times or until it hits an enemy. While below 10 ammo ricochet hits refund 1 ammo.")
 mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impact_data, hit_unit, hit_position, hit_direction, hit_normal, hit_actor, breed, has_ranged_boost, ranged_boost_curve_multiplier)
 	local shield_blocked = false
 	local damage_profile_name = impact_data.damage_profile or "default"
@@ -1553,30 +1552,23 @@ mod:hook_origin(PlayerProjectileUnitExtension, "hit_enemy", function(self, impac
 		local num_targets_hit = self._num_targets_hit + 1
 		local unmodified = true
 
-		-- Ricochet talent effects ammo refund + crits
-		if HEALTH_ALIVE[hit_unit] then
-			local owner_unit = self._owner_unit
+		-- Ricochet ammo refund
+		if HEALTH_ALIVE[hit_unit] and ALIVE[owner_unit] then
 			local talent_extension = ScriptUnit.has_extension(owner_unit, "talent_system")
-			local has_ricochet_talent = talent_extension and talent_extension:has_talent("kerillian_waywatcher_projectile_ricochet")
 
-			-- 1 ammo refund when hit after ricochet.
-			if ALIVE[owner_unit] and has_ricochet_talent then
-				local weapon_slot = "slot_ranged"
-				local ammo_amount = 1 --self._num_bounces
+			if  talent_extension and talent_extension:has_talent("kerillian_waywatcher_projectile_ricochet") then
 				local inventory_extension = ScriptUnit.extension(owner_unit, "inventory_system")
-				local slot_data = inventory_extension:get_slot_data(weapon_slot)
-				local right_unit_1p = slot_data.right_unit_1p
-				local left_unit_1p = slot_data.left_unit_1p
-				local ammo_extension = GearUtils.get_ammo_extension(right_unit_1p, left_unit_1p)
+				local slot_data = inventory_extension:get_slot_data("slot_ranged")
+				local ammo_extension = GearUtils.get_ammo_extension(slot_data.right_unit_1p, slot_data.left_unit_1p)
 
 				if ammo_extension and self._num_bounces > 0 and not self._is_bonus_shot then
-                    local current_clip = ammo_extension:ammo_count()
-                    local current_reserve = ammo_extension:remaining_ammo()
-                    local total_ammo = current_clip + current_reserve
-                    
-                    if total_ammo <= 10 then
-                        ammo_extension:add_ammo_to_reserve(ammo_amount)
-                    end
+					local current_ammo = ammo_extension:ammo_count() + ammo_extension:remaining_ammo()
+					ammo_threshold = 10
+
+					if current_ammo < ammo_threshold then
+						local ammo_amount = self._num_bounces
+						ammo_extension:add_ammo_to_reserve(ammo_amount)
+					end
                 end
 			end
 		end
