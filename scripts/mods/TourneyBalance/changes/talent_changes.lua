@@ -2127,7 +2127,7 @@ mod:modify_talent("wh_captain", 6, 2, {
 	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 12 seconds and grants 24 guaranteed melee critical strikes. No longer affects teammates and ranged attacks.")
+mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds and grants 20 guaranteed melee critical strikes. No longer affects teammates and ranged attacks.")
 
 
 
@@ -2140,26 +2140,33 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Victor deals 25.0%% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Additionally Victor deals 25.0%% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
 
 
 
--- I Shall Judge You All: permanently tags & debuffs every pingable enemy on the level when Animosity is used
+-- I Shall Judge You All: permanently tags and debuffs all specials on the level when Animosity is used
 mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Apply Witch Hunt to all specials and enemies hit by Animosity. Victor always deals 25.0%% more direct damage to Infantry, Boss and Lords.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies With Hunt to enemies hit by Animosity and permanently tags all specials. Additionally Victor always deals 25.0%% more direct damage to Infantry, Lords and Bosses.")
 
-local PING_DURATION = 150
+local PING_DURATION = 30
 local marked_enemies = {}
 
-mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, impact_position, rotation, explosion_template, scale, damage_source, is_server, is_husk, damaging_unit, attacker_power_level, is_critical_strike, source_attacker_unit)
-	if explosion_template ~= ExplosionTemplates.victor_captain_activated_ability_stagger_ping_debuff
-		and explosion_template ~= ExplosionTemplates.victor_captain_activated_ability_stagger_ping_debuff_improved then
-		return
-	end
+OutlineSettings.colors.tb_judged_special = {
+	pulsate = false,
+	pulse_multiplier = 50,
+	color = { 255, 227, 4, 4 }, -- alpha, r, g, b (red)
+}
+OutlineSettings.templates.tb_judged_special = {
+	method = "ai_alive",
+	priority = 15,
+	outline_color = OutlineSettings.colors.tb_judged_special,
+	flag = OutlineSettings.flags.non_wall_occluded,
+}
 
+mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, impact_position, rotation, explosion_template, scale, damage_source, is_server, is_husk, damaging_unit, attacker_power_level, is_critical_strike, source_attacker_unit)
 	if not ALIVE[attacker_unit] then
 		return
 	end
@@ -2173,34 +2180,27 @@ mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, i
 	local has_templars_knowledge = talent_extension:has_talent("victor_witchhunter_improved_damage_taken_ping")
 	local proximity_system = Managers.state.entity:system("proximity_system")
 	local t = Managers.time:time("game")
-	local ult_radius = explosion_template.explosion.radius or 10
-	local nearby_enemy_units = FrameTable.alloc_table()
-
-	Broadphase.query(proximity_system.enemy_broadphase, impact_position, ult_radius, nearby_enemy_units)
-
-	local hit_by_ult = {}
-
-	for i = 1, #nearby_enemy_units do
-		hit_by_ult[nearby_enemy_units[i]] = true
-	end
 
 	for enemy_unit, _ in pairs(proximity_system.ai_unit_extensions_map) do
-		local is_hit_by_ult = hit_by_ult[enemy_unit]
-		local breed = not is_hit_by_ult and Unit.get_data(enemy_unit, "breed")
+		local breed = Unit.get_data(enemy_unit, "breed")
 		local is_special = breed and breed.special
 
-		if ALIVE[enemy_unit] and (is_hit_by_ult or is_special) then
+		if ALIVE[enemy_unit] and is_special then
 			if marked_enemies[enemy_unit] then
 				marked_enemies[enemy_unit].expire_t = t + PING_DURATION
 			else
 				local ping_extension = ScriptUnit.has_extension(enemy_unit, "ping_system")
 
 				if ping_extension then
-					ping_extension:set_pinged(true, false, attacker_unit, true)
+					ping_extension:set_pinged(true, false, attacker_unit, false)
+
+					local outline_extension = ScriptUnit.has_extension(enemy_unit, "outline_system")
+					local outline_id = outline_extension and outline_extension:add_outline(OutlineSettings.templates.tb_judged_special)
 
 					marked_enemies[enemy_unit] = {
 						owner_unit = attacker_unit,
 						expire_t = t + PING_DURATION,
+						outline_id = outline_id,
 					}
 				end
 			end
@@ -2232,7 +2232,13 @@ mod:hook_safe(IngameHud, "update", function (self)
 				local ping_extension = ScriptUnit.has_extension(enemy_unit, "ping_system")
 
 				if ping_extension then
-					ping_extension:set_pinged(false, nil, data.owner_unit, true)
+					ping_extension:set_pinged(false, nil, data.owner_unit, false)
+				end
+
+				local outline_extension = ScriptUnit.has_extension(enemy_unit, "outline_system")
+
+				if outline_extension and data.outline_id then
+					outline_extension:remove_outline(data.outline_id)
 				end
 			end
 
