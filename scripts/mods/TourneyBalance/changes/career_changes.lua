@@ -705,6 +705,43 @@ mod:hook_safe(CareerAbilityWHZealot, "_run_ability", function(self)
     health_extension:convert_to_temp(perm_health)
 end)
 
+-- Fix Zealot invulnerability desync/invincibility bug: this proc runs on both client and server, and the
+-- server is always faster to evaluate the killing blow. The original code only added the buff locally via
+-- buff_extension:add_buff, so the server could already consider the owner unkillable without ever telling
+-- the client. The client must defer to whatever the server has already synced instead of re-evaluating the
+-- killing blow itself, and the server must use mod:add_buff so the invulnerability buff actually replicates.
+mod:add_proc_function("victor_zealot_gain_invulnerability", function (owner_unit, buff, params)
+    local status_extension = ScriptUnit.extension(owner_unit, "status_system")
+
+    if not Managers.state.network.is_server and ALIVE[owner_unit] then
+        local buff_extension = ScriptUnit.has_extension(owner_unit, "buff_system")
+
+        return buff_extension:has_buff_type("victor_zealot_invulnerability_on_lethal_damage_taken")
+    end
+
+    if ALIVE[owner_unit] and not status_extension:is_knocked_down() then
+        local health_extension = ScriptUnit.extension(owner_unit, "health_system")
+        local buff_extension = ScriptUnit.has_extension(owner_unit, "buff_system")
+        local already_unkillable = buff_extension:has_buff_perk("invulnerable") or buff_extension:has_buff_perk("ignore_death")
+
+        if already_unkillable then
+            return false
+        end
+
+        local damage = params[2]
+        local current_health = health_extension:current_health()
+        local killing_blow = current_health <= damage
+        local template = buff.template
+        local buff_to_add = template.buff_to_add
+
+        if killing_blow then
+            mod:add_buff(owner_unit, buff_to_add)
+
+            return true
+        end
+    end
+end)
+
 --[[
 
 	Battle Wizard
@@ -1104,7 +1141,9 @@ mod:add_buff_function("markus_knight_movespeed_on_incapacitated_ally", function 
 	buff.disabled_allies = disabled_allies
 end)
 
---Stam-Tech Removal
+-- Stam-Tech: Internal Cooldown
+local STAM_TECH_COOLDOWN = 30
+
 CharacterStateHelper.check_to_start_dodge = function (unit, input_extension, status_extension, t)
 	if status_extension:dodge_locked() or not status_extension:can_dodge(t) then
 		return false
@@ -1168,6 +1207,13 @@ CharacterStateHelper.check_to_start_dodge = function (unit, input_extension, sta
 
 	if start_dodge then
 		Managers.state.entity:system("play_go_tutorial_system"):register_dodge(dodge_direction)
+
+		local last_stam_tech_t = status_extension._stam_tech_last_t
+		if not last_stam_tech_t or t - last_stam_tech_t >= STAM_TECH_COOLDOWN then
+			status_extension._stam_tech_last_t = t
+			status_extension:add_fatigue_points("action_dodge")
+		end
+
 		status_extension:set_dodge_locked(true)
 		status_extension:add_dodge_cooldown()
 

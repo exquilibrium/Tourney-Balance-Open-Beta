@@ -213,26 +213,68 @@ DamageProfileTemplates.arrow_carbine.default_target.boost_curve_coefficient = 0.
 DamageProfileTemplates.arrow_carbine.default_target.boost_curve_coefficient_headshot = 0.8 -- 1
 DamageProfileTemplates.arrow_sniper_kruber.critical_strike.attack_armor_power_modifer = { 1, 1, 1, 1, 0.75, 0.5 }
 
--- Blunderbuss Bash Nerf
-Weapons.blunderbuss_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
-Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
-Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 2.5--0.9 -- 2.5
+-- Old Bash Nerf
+--Weapons.blunderbuss_template_1.actions.action_two.default.push_radius = 0.9
+--Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 0.9
+--Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 0.9
+--- Bash Nerf 2.0
+-- Adds max stamina, stamina consumption, and removes chaining/starting the bash below 2 stamina points.
+local MIN_STAMINA_POINTS_TO_BASH = 2
 
---- Test Bash Nerf 2.0
---TB Shotgun Bash Nerf
-    -- prevents reload cancel
-Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[5].start_time = 0.75 -- 0.5
-Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[5].start_time = 0.75 -- 0.65
-Weapons.wh_deus_01_template_1.actions.action_two.default.allowed_chain_actions[3].start_time = 2 -- 0.5
-    -- prevents QQ
-Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[2].start_time = 0.75 -- 0.5
-Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[2].start_time = 0.75 -- 0.45
-Weapons.wh_deus_01_template_1.actions.action_two.default.allowed_chain_actions[4].start_time = 2 -- 0.4
-    -- prevents early swap cancel (before it hits)
-Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0 -- 0.2
-Weapons.blunderbuss_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0 -- 0
-Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].end_time = 0 -- 0.2
-Weapons.grudge_raker_template_1.actions.action_two.default.allowed_chain_actions[1].start_time = 0 -- 0
+local function can_start_bash(owner_unit, input_extension)
+	local status_extension = ScriptUnit.extension(owner_unit, "status_system")
+	local consumed_points, max_points = status_extension:current_fatigue_points()
+
+	return max_points - consumed_points >= MIN_STAMINA_POINTS_TO_BASH
+end
+
+Weapons.blunderbuss_template_1.max_fatigue_points = 6 -- nil
+Weapons.blunderbuss_template_1.actions.action_two.default.add_fatigue_on_hit = true
+Weapons.blunderbuss_template_1.actions.action_two.default.chain_condition_func = can_start_bash
+
+Weapons.grudge_raker_template_1.max_fatigue_points = 6 -- nil
+Weapons.grudge_raker_template_1.actions.action_two.default.add_fatigue_on_hit = true
+Weapons.grudge_raker_template_1.actions.action_two.default.chain_condition_func = can_start_bash
+
+Weapons.wh_deus_01_template_1.max_fatigue_points = 6 -- nil
+Weapons.wh_deus_01_template_1.actions.action_two.default.add_fatigue_on_hit = true
+Weapons.wh_deus_01_template_1.actions.action_two.default.chain_condition_func = can_start_bash
+
+-- Prevent weapon swap while fatigued
+-- action_wield table is shared by reference across nearly every weapon (ActionTemplates.wield),
+-- Needs per-weapon clone before mutating chain_condition_func, otherwise prevents weapon swapping globally.
+-- The original can_wield() check is preserved and evaluated first.
+local original_wield_chain_condition_func = ActionTemplates.wield.default.chain_condition_func
+
+local function block_wield_while_fatigued(owner_unit, input_extension)
+	if not original_wield_chain_condition_func(owner_unit, input_extension) then
+		return false
+	end
+
+	local status_extension = ScriptUnit.extension(owner_unit, "status_system")
+
+	return not status_extension:fatigued()
+end
+
+Weapons.blunderbuss_template_1.actions.action_wield = table.clone(ActionTemplates.wield)
+Weapons.blunderbuss_template_1.actions.action_wield.default.chain_condition_func = block_wield_while_fatigued
+
+Weapons.grudge_raker_template_1.actions.action_wield = table.clone(ActionTemplates.wield)
+Weapons.grudge_raker_template_1.actions.action_wield.default.chain_condition_func = block_wield_while_fatigued
+
+Weapons.wh_deus_01_template_1.actions.action_wield = table.clone(ActionTemplates.wield)
+Weapons.wh_deus_01_template_1.actions.action_wield.default.chain_condition_func = block_wield_while_fatigued
+
+-- Stamina consumption on shield_slam hit if add_fatigue_on_hit is set and enemy is hit.
+-- Shields go through same ActionShieldSlam class, but never set add_fatigue_on_hit.
+mod:hook_safe(ActionShieldSlam, "_hit", function (self, world, can_damage, owner_unit, current_action)
+	if current_action.add_fatigue_on_hit and self._num_targets_hit > 0 then
+		local buff_extension = ScriptUnit.extension(owner_unit, "buff_system")
+		local status_extension = ScriptUnit.extension(owner_unit, "status_system")
+
+		self:_handle_fatigue(buff_extension, status_extension, current_action, false)
+	end
+end)
 
 
 
@@ -350,8 +392,6 @@ NewDamageProfileTemplates.masterwork_pistol_shot = {
 	},
 }
 
--- Grudgeraker Bash Nerf
---Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 0.9 -- 2.5
 
 
 
@@ -728,8 +768,6 @@ local balanced_barrels =  { {	yaw = -1, pitch = 0, shot_count = 2 }, { yaw = -0.
 Weapons.wh_deus_01_template_1.actions.action_one.default.barrels = balanced_barrels
 DamageProfileTemplates.shot_duckfoot.cleave_distribution.attack = 0.05
 DamageProfileTemplates.shot_duckfoot.cleave_distribution.impact = 0.05
--- Bash nerf
---Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 0.9 -- 2.5
 
 -- Brace of Pistols buff
 Weapons.brace_of_pistols_template_1.ammo_data.max_ammo = 50

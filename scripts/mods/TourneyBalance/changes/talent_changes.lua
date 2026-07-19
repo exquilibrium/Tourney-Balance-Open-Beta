@@ -2084,8 +2084,7 @@ mod:modify_talent("wh_captain", 2, 1, {
 mod:add_text("victor_witchhunter_guaranteed_crit_on_timed_block_desc_new", "Blocking just as an enemy attack is about to hit causes your next melee or ranged attack within 2 seconds to be a guaranteed critical hit.")
 
 
--- Fervency: extend guaranteed melee crit from 6s to 12s and 24 melee crit stacks
-
+-- Fervency: extend guaranteed melee crit from 6s to 10s and 20 melee crit stacks
 mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_activated_ability_guaranteed_crit_self_buff", {
 	duration = 10, -- 6
 })
@@ -2095,7 +2094,7 @@ mod:modify_talent("wh_captain", 6, 2, {
 	description_values = {},
 })
 
--- Fervency: additionally grants 12 stacks of guaranteed melee crit on ult use
+-- Fervency: additionally grants 20 stacks of guaranteed melee crit on ult use
 mod:add_talent_buff_template("witch_hunter", "tb_fervency_crit_stacks", {
 	icon = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff",
 	stat_buff = "critical_strike_chance_melee",
@@ -2127,9 +2126,7 @@ mod:modify_talent("wh_captain", 6, 2, {
 	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds and grants 20 guaranteed melee critical strikes. No longer affects teammates and ranged attacks.")
-
-
+mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds and for his next 20 melee hits. No longer affects teammates and ranged attacks.")
 
 
 -- Templar's Knowledge ### SEE thp_stagger_changes.lua
@@ -2140,7 +2137,7 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0%% damage. Additionally Victor deals 25.0%% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0% damage. Additionally Victor deals 25.0% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
 
 
 
@@ -2149,9 +2146,9 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies With Hunt to enemies hit by Animosity and permanently tags all specials. Additionally Victor always deals 25.0%% more direct damage to Infantry, Lords and Bosses.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies With Hunt to enemies hit by Animosity and all specials. Additionally Victor always deals 25.0% more direct damage to Infantry, Lords and Bosses.")
 
-local PING_DURATION = 30
+local PING_DURATION = 15
 local marked_enemies = {}
 
 OutlineSettings.colors.tb_judged_special = {
