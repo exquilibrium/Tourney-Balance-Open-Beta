@@ -187,8 +187,12 @@ local function apply_buffs_to_stagger_damage(attacker_unit, target_unit, target_
 		local smiter_perk = attacker_buff_extension:has_buff_perk("smiter_stagger_damage")
 		local mainstay_perk = attacker_buff_extension:has_buff_perk("linesman_stagger_damage")
 
-		if mainstay_perk and new_stagger_number > 0 then
-			new_stagger_number = new_stagger_number + 1
+		if mainstay_perk then
+			local target_buff_extension = ScriptUnit.has_extension(target_unit, "buff_system")
+
+			if target_buff_extension then
+				target_buff_extension:add_buff("rebaltourn_mainstay_stagger_mark_buff")
+			end
 		elseif (hit_zone == "head" or hit_zone == "neck") and finesse_perk then
 			new_stagger_number = 2
 		elseif smiter_perk then
@@ -557,6 +561,12 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 				stagger_number = math.max(stagger_number_override, stagger_number)
 			end
 
+			local target_buff_extension = ScriptUnit.has_extension(target_unit, "buff_system")
+
+			if target_buff_extension then
+				stagger_number = target_buff_extension:apply_buffs_to_value(stagger_number, "dummy_stagger")
+			end
+
 			if not damage_profile.no_stagger_damage_reduction_ranged then
 				stagger_number = apply_buffs_to_stagger_damage(attacker_unit, target_unit, target_index, hit_zone_name, is_critical_strike, stagger_number)
 			end
@@ -685,6 +695,7 @@ function mod.modify_talent(self, career_name, tier, index, new_talent_data)
 end
 
 local buff_perks = require("scripts/unit_extensions/default_player_unit/buffs/settings/buff_perk_names")
+local stagger_types = require("scripts/utils/stagger_types")
 
 --[[
 
@@ -846,9 +857,9 @@ mod:add_buff_template("rebaltourn_power_level_unbalance", {
 mod:add_proc_function("rebaltourn_unbalance_debuff_on_stagger", function (owner_unit, buff, params)
 	local hit_unit = params[1]
 	local is_dummy = Unit.get_data(hit_unit, "is_dummy")
-	local buff_type = params[7]
+	local stagger_type = params[4]
 
-	if Unit.alive(owner_unit) and (is_dummy or Unit.alive(hit_unit)) and buff_type == "MELEE_1H" or buff_type == "MELEE_2H" then
+	if Unit.alive(owner_unit) and (is_dummy or Unit.alive(hit_unit)) and stagger_type == stagger_types.explosion then
 		local buff_extension = ScriptUnit.extension(hit_unit, "buff_system")
 
 		if buff_extension then
@@ -862,7 +873,9 @@ mod:add_buff_template("rebaltourn_tank_unbalance", {
 	event_buff = true,
 	buff_func = "rebaltourn_unbalance_debuff_on_stagger",
 	event = "on_stagger",
-	display_multiplier = 0.2
+	display_multiplier = 0.2,
+	stat_buff = "power_level_impact",
+	multiplier = 0.15
 })
 mod:add_buff_template("rebaltourn_tank_unbalance_buff", {
 	refresh_durations = true,
@@ -870,7 +883,15 @@ mod:add_buff_template("rebaltourn_tank_unbalance_buff", {
 	stat_buff = "unbalanced_damage_taken",
 	max_stacks = 1,
 	duration = 5,
-	bonus = 0.15,
+	bonus = 0.10,
+})
+mod:add_buff_template("rebaltourn_mainstay_stagger_mark_buff", {
+	refresh_durations = true,
+	name = "mainstay_stagger_mark_buff",
+	stat_buff = "dummy_stagger",
+	max_stacks = 1,
+	duration = 5,
+	bonus = 1,
 })
 mod:add_buff_template("rebaltourn_finesse_unbalance", {
 	max_display_multiplier = 0.4,
@@ -878,6 +899,14 @@ mod:add_buff_template("rebaltourn_finesse_unbalance", {
 	display_multiplier = 0.2,
 	perks = { buff_perks.finesse_stagger_damage }
 })
+--[[
+mod:add_buff_template("rebaltourn_linesman_unbalance", {
+	max_display_multiplier = 0.6,
+	name = "linesman_unbalance",
+	display_multiplier = 0.4,
+	perks = { buff_perks.linesman_stagger_damage }
+})
+]]
 
 --[[
 
@@ -895,8 +924,10 @@ mod:add_text("smiter_name", "Smiter")
 mod:add_text("enhanced_power_name", "Enhanced Power")
 mod:add_text("assassin_name", "Assassin")
 mod:add_text("bulwark_name", "Bulwark")
-mod:add_text("rebaltourn_tank_unbalance_desc", "When you stagger an enemy they take 15% more damage from all sources for 5 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
-mod:add_text("rebaltourn_finesse_unbalance_desc", "Deal 20%% more damage to staggered enemies.\n\nEach hit against a staggered enemy adds another count of stagger. Headshots instead inflict 40%% bonus damage, as do strikes against enemies afflicted by more than one stagger effect.")
+mod:add_text("mainstay_name", "Mainstay")
+--mod:add_text("rebaltourn_linesman_unbalance_desc", "Hitting enemies adds a count of stagger.\n\nDeal 40% more damage to staggered enemies. Each hit against a staggered enemy adds another count of stagger. Bonus damage is increased to 60% against enemies afflicted by more than one stagger effect.")
+mod:add_text("rebaltourn_tank_unbalance_desc", "Gain 15.0% stagger power. Enemies that you stagger with explosions take 10.0% more damage from all sources for 5 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
+mod:add_text("rebaltourn_finesse_unbalance_desc", "Deal 20% more damage to staggered enemies.\n\nEach hit against a staggered enemy adds another count of stagger. Headshots instead inflict 40%% bonus damage, as do strikes against enemies afflicted by more than one stagger effect.")
 
 -- Replacing THP & Stagger Talents
 local talent_first_row = {
@@ -933,9 +964,9 @@ local talent_first_row = {
 	{
 		"we_maidenguard",
 	},
-	{
-		"wh_captain",
-	},
+	--{
+	--	"wh_captain",
+	--},
 }
 
 -- Stagger | Cleave | Kill
@@ -1233,6 +1264,9 @@ local talent_third_row = {
 	{
 		"es_questingknight",
 	},
+	{
+		--"es_knight",
+	},
 }
 -- smiter - assassin - Enhanced Power
 for i=1, #talent_third_row[1] do
@@ -1354,6 +1388,39 @@ for i=1, #talent_third_row[3] do
 				value = BuffTemplates.rebaltourn_smiter_unbalance.buffs[1].max_display_multiplier
 			}
 		}
+	})
+	mod:modify_talent(career, 3, 3, {
+		name = "enhanced_power_name",
+		description = "power_level_unbalance_desc",
+		buffs = {
+			"rebaltourn_power_level_unbalance"
+		},
+		description_values = {
+			{
+				value_type = "percent",
+				value = BuffTemplates.rebaltourn_power_level_unbalance.buffs[1].multiplier
+			}
+		}
+	})
+end
+-- Bulwark - Mainstay - Enhanced Power
+for i=1, #talent_third_row[4] do
+	local career = talent_third_row[4][i]
+	mod:modify_talent(career, 3, 1, {
+		name = "bulwark_name",
+		description = "rebaltourn_tank_unbalance_desc",
+		buffs = {
+			"rebaltourn_tank_unbalance"
+		},
+		description_values = {},
+	})
+	mod:modify_talent(career, 3, 2, {
+		name = "mainstay_name",
+		description = "rebaltourn_linesman_unbalance_desc",
+		buffs = {
+			"rebaltourn_linesman_unbalance"
+		},
+		description_values = {},
 	})
 	mod:modify_talent(career, 3, 3, {
 		name = "enhanced_power_name",

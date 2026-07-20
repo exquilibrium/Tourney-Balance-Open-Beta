@@ -1208,6 +1208,7 @@ CharacterStateHelper.check_to_start_dodge = function (unit, input_extension, sta
 	if start_dodge then
 		Managers.state.entity:system("play_go_tutorial_system"):register_dodge(dodge_direction)
 
+		-- Stam-Tech Internal CD check
 		local last_stam_tech_t = status_extension._stam_tech_last_t
 		if not last_stam_tech_t or t - last_stam_tech_t >= STAM_TECH_COOLDOWN then
 			status_extension._stam_tech_last_t = t

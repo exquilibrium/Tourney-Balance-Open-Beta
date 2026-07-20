@@ -2164,13 +2164,19 @@ OutlineSettings.templates.tb_judged_special = {
 }
 
 mod:hook_safe(DamageUtils, "create_explosion", function (world, attacker_unit, impact_position, rotation, explosion_template, scale, damage_source, is_server, is_husk, damaging_unit, attacker_power_level, is_critical_strike, source_attacker_unit)
-	if not ALIVE[attacker_unit] then
+	if damage_source ~= "career_ability" or not ALIVE[attacker_unit] then
+		return
+	end
+
+	local career_extension = ScriptUnit.has_extension(attacker_unit, "career_system")
+
+	if not career_extension or career_extension:career_name() ~= "wh_captain" then
 		return
 	end
 
 	local talent_extension = ScriptUnit.has_extension(attacker_unit, "talent_system")
 
-	if not talent_extension then
+	if not talent_extension or not talent_extension:has_talent("victor_captain_activated_ability_stagger_ping_debuff") then
 		return
 	end
 
