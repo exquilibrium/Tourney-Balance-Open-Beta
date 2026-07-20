@@ -2126,7 +2126,7 @@ mod:modify_talent("wh_captain", 6, 2, {
 	description = "victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds and for his next 20 melee hits. No longer affects teammates and ranged attacks.")
+mod:add_text("victor_witchhunter_activated_ability_guaranteed_crit_self_buff_desc_new", "Animosity grants Victor guaranteed melee critical strikes for 10 seconds and the next 20 melee hits. No longer affects teammates and ranged attacks.")
 
 
 -- Templar's Knowledge ### SEE thp_stagger_changes.lua
@@ -2137,17 +2137,56 @@ mod:modify_talent("wh_captain", 4, 1, {
 	description = "victor_witchhunter_improved_damage_taken_ping_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0% damage. Additionally Victor deals 25.0% more direct damage to enemies affected by Witch Hunt (except Lords and Bosses).")
+mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hunt causes enemies to take an additional 5.0% damage. Victor deals additional 25.0% direct damage to enemies affected by Witch Hunt.")
 
 
 
--- I Shall Judge You All: permanently tags and debuffs all specials on the level when Animosity is used
+-- I Shall Judge You All: Headshotting enemies affected by Witch Hunt extends crit duration by 2 seconds
+local ISJYA_ANIMOSITY_MAX_DURATION = 90
+
+mod:add_proc_function("tb_isjya_extend_animosity_on_headshot", function (owner_unit, buff, params)
+	if not Unit.alive(owner_unit) then
+		return
+	end
+
+	local hit_unit = params[1]
+	local hit_zone_name = params[3]
+
+	if hit_zone_name ~= "head" then
+		return
+	end
+
+	local hit_unit_buff_extension = hit_unit and ALIVE[hit_unit] and ScriptUnit.has_extension(hit_unit, "buff_system")
+
+	if not hit_unit_buff_extension or not hit_unit_buff_extension:has_buff_type("defence_debuff_enemies") then
+		return
+	end
+
+	local buff_extension = ScriptUnit.extension(owner_unit, "buff_system")
+	local animosity_buff = buff_extension:get_buff_type("victor_witchhunter_activated_ability_crit_buff")
+
+	if animosity_buff and animosity_buff.duration then
+		animosity_buff.duration = math.min(animosity_buff.duration + buff.bonus, ISJYA_ANIMOSITY_MAX_DURATION)
+		animosity_buff.end_time = animosity_buff.start_time + animosity_buff.duration
+	end
+end)
+
+mod:add_talent_buff_template("witch_hunter", "tb_isjya_extend_animosity_on_headshot", {
+	buff_func = "tb_isjya_extend_animosity_on_headshot",
+	event = "on_hit",
+	bonus = 2,
+})
+
 mod:modify_talent("wh_captain", 6, 1, {
+	buffs = {
+		"tb_isjya_extend_animosity_on_headshot",
+	},
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies With Hunt to enemies hit by Animosity and all specials. Additionally Victor always deals 25.0% more direct damage to Infantry, Lords and Bosses.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity. Headshotting enemies affected by Witch Hunt extends the duration of Animosity by 2 seconds.")
 
+--[[ Ping All Specials on WHC ISJYA ULT
 local PING_DURATION = 15
 local marked_enemies = {}
 
@@ -2249,6 +2288,7 @@ mod:hook_safe(IngameHud, "update", function (self)
 		end
 	end
 end)
+]]
 
 --[[
 

@@ -624,13 +624,14 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 			if is_direct_hit then
 				local target_buff_extension = ScriptUnit.has_extension(target_unit, "buff_system")
 				-- Templars Knowledge
-				if target_buff_extension and target_buff_extension:has_buff_type("defence_debuff_enemies") and not (breed and breed.boss) then
+				if target_buff_extension and target_buff_extension:has_buff_type("defence_debuff_enemies") then -- and not (breed and breed.boss) then
 					calculated_damage = calculated_damage * 1.25
 				end
-				-- I Shall Judge You All
+				--[[ I Shall Judge You All Passive
 				if target_buff_extension and attacker_talent_extension:has_talent("victor_captain_activated_ability_stagger_ping_debuff") and not (breed and (breed.elite or breed.special)) then
 					calculated_damage = calculated_damage * 1.25
 				end
+				]]
 			end
 		end
 	end
