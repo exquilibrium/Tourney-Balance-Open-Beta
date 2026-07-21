@@ -1142,7 +1142,7 @@ mod:add_buff_function("markus_knight_movespeed_on_incapacitated_ally", function 
 end)
 
 -- Stam-Tech: Internal Cooldown
-local STAM_TECH_COOLDOWN = 30
+local STAM_TECH_COOLDOWN = 120
 
 CharacterStateHelper.check_to_start_dodge = function (unit, input_extension, status_extension, t)
 	if status_extension:dodge_locked() or not status_extension:can_dodge(t) then
