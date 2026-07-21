@@ -639,7 +639,7 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 			if is_direct_hit then
 				local target_buff_extension = ScriptUnit.has_extension(target_unit, "buff_system")
 				-- Templars Knowledge
-				if target_buff_extension and target_buff_extension:has_buff_type("defence_debuff_enemies") then -- and not (breed and breed.boss) then
+				if target_buff_extension and target_buff_extension:has_buff_type("defence_debuff_enemies") and not (breed and breed.boss) then
 					calculated_damage = calculated_damage * 1.25
 				end
 				--[[ I Shall Judge You All Passive
