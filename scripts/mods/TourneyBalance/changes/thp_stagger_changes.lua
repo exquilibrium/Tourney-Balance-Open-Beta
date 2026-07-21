@@ -891,20 +891,20 @@ mod:add_buff_template("rebaltourn_tank_unbalance", {
 	stat_buff = "power_level_impact",
 	multiplier = 0.15
 })
-mod:add_buff_template("rebaltourn_tank_unbalance_buff", {
+mod:add_buff_template("rebaltourn_tank_unbalance_buff", { -- Bulwark
 	refresh_durations = true,
 	name = "tank_unbalance_buff",
 	stat_buff = "unbalanced_damage_taken",
 	max_stacks = 1,
-	duration = 5,
+	duration = 10,
 	bonus = 0.10,
 })
-mod:add_buff_template("rebaltourn_mainstay_stagger_mark_buff", {
+mod:add_buff_template("rebaltourn_mainstay_stagger_mark_buff", { -- Mainstay
 	refresh_durations = true,
 	name = "mainstay_stagger_mark_buff",
 	stat_buff = "dummy_stagger",
 	max_stacks = 2,
-	duration = 5,
+	duration = 2,
 	bonus = 1,
 })
 mod:add_buff_template("rebaltourn_finesse_unbalance", {
@@ -937,9 +937,9 @@ mod:add_text("rebaltourn_smiter_unbalance_desc", 	"The first enemy hit always co
 mod:add_text("assassin_name", "Assassin")
 mod:add_text("rebaltourn_finesse_unbalance_desc", 	"Headshots inflict 40% bonus damage.\n\nDeal 20% more damage to staggered enemies, increased to 40% against enemies afflicted by more than one stagger effect.")
 mod:add_text("bulwark_name", "Bulwark")
-mod:add_text("rebaltourn_tank_unbalance_desc", 		"Gain 20% stagger power. Enemies that you stagger with any attack take 10% more damage from all sources for 5 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
+mod:add_text("rebaltourn_tank_unbalance_desc", 		"Gain 20% stagger power. Enemies that you stagger with any attack take 10% more damage from all sources for 10 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
 mod:add_text("mainstay_name", "Mainstay")
-mod:add_text("rebaltourn_linesman_unbalance_desc", 	"Each melee hit against an enemy adds another count of stagger.\n\nDeal 40% more damage to staggered enemies, increased to 60% against enemies afflicted by more than one stagger effect.")
+mod:add_text("rebaltourn_linesman_unbalance_desc", 	"Each melee hit against enemy adds another count of stagger for 2s.\n\nDeal 40% more damage to staggered enemies, increased to 60% against enemies afflicted by more than one stagger effect.")
 mod:add_text("enhanced_power_name", "Enhanced Power")
 
 -- Replacing THP & Stagger Talents
