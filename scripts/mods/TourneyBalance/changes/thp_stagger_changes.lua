@@ -576,7 +576,7 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 			local target_buff_extension = ScriptUnit.has_extension(target_unit, "buff_system")
 
 			if target_buff_extension then
-				stagger_number = target_buff_extension:apply_buffs_to_value(stagger_number, "dummy_stagger")
+				stagger_number = target_buff_extension:apply_buffs_to_value(stagger_number, "dummy_stagger") -- Apply mainstay stagger
 			end
 
 			if not damage_profile.no_stagger_damage_reduction_ranged then
@@ -596,8 +596,11 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 			end
 		end
 
+		stagger_number = math.min(stagger_number, 2) -- Mainstay cap
+
 		local min_stagger_damage_coefficient = difficulty_settings.min_stagger_damage_coefficient
-		local stagger_damage_multiplier = difficulty_settings.stagger_damage_multiplier
+		--local stagger_damage_multiplier = difficulty_settings.stagger_damage_multiplier
+		local stagger_damage_multiplier = 0.2 -- fixed 20% per stagger count (1/2/3 -> 20%/40%/60%), regardless of difficulty_settings.stagger_damage_multiplier
 
 		if stagger_damage_multiplier then
 			local bonus_damage_percentage = stagger_number * stagger_damage_multiplier
@@ -939,7 +942,7 @@ mod:add_text("rebaltourn_finesse_unbalance_desc", 	"Headshots inflict 40% bonus 
 mod:add_text("bulwark_name", "Bulwark")
 mod:add_text("rebaltourn_tank_unbalance_desc", 		"Gain 20% stagger power. Enemies that you stagger with any attack take 10% more damage from all sources for 10 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
 mod:add_text("mainstay_name", "Mainstay")
-mod:add_text("rebaltourn_linesman_unbalance_desc", 	"Each melee hit against enemy adds another count of stagger for 2s.\n\nDeal 40% more damage to staggered enemies, increased to 60% against enemies afflicted by more than one stagger effect.")
+mod:add_text("rebaltourn_linesman_unbalance_desc", 	"Each melee hit against enemy adds another count of stagger for 2s.\n\nDeal 20% more damage to staggered enemies, increased to 40% against enemies afflicted by more than one stagger effect.")
 mod:add_text("enhanced_power_name", "Enhanced Power")
 
 -- Replacing THP & Stagger Talents
