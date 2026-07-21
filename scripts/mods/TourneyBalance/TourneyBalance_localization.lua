@@ -412,8 +412,20 @@ local localization = {
 		en = "Stagger State Visualizer",
 	},
 	stagger_state_visualizer_description = {
-		en = "Outlines enemies based on their current stagger count."
+		en = "Outlines enemies based on the sum of the stagger counts enabled below."
 			.. "\nGreen = 1, Yellow = 2, Red = more than 2, No outline = 0.",
+	},
+	stagger_state_visualizer_include_real_title = {
+		en = "Include Real Stagger Count",
+	},
+	stagger_state_visualizer_include_real_description = {
+		en = "Include the enemy's real stagger count (blackboard.stagger) in the visualized sum.",
+	},
+	stagger_state_visualizer_include_mainstay_title = {
+		en = "Include Mainstay Stagger Count",
+	},
+	stagger_state_visualizer_include_mainstay_description = {
+		en = "Include the Mainstay talent's marked stagger count (from the target's dummy_stagger buff) in the visualized sum.",
 	},
 }
 

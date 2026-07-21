@@ -77,6 +77,20 @@ return {
 						title = "stagger_state_visualizer_title",
 						tooltip = "stagger_state_visualizer_description",
 					},
+					{
+						type = "checkbox",
+						setting_id = "stagger_state_visualizer_include_real",
+						default_value = true,
+						title = "stagger_state_visualizer_include_real_title",
+						tooltip = "stagger_state_visualizer_include_real_description",
+					},
+					{
+						type = "checkbox",
+						setting_id = "stagger_state_visualizer_include_mainstay",
+						default_value = true,
+						title = "stagger_state_visualizer_include_mainstay_title",
+						tooltip = "stagger_state_visualizer_include_mainstay_description",
+					},
 				},
 			},
 		}

@@ -4,7 +4,9 @@ local mod = get_mod("TourneyBalance")
 
 	Stagger State Visualizer
 
-	Outlines enemies based on their real stagger count (blackboard.stagger):
+	Outlines enemies based on the sum of whichever stagger counts are enabled
+	(real stagger count from blackboard.stagger, Mainstay's marked stagger count
+	from the target's dummy_stagger buff):
 		0        -> no outline
 		1        -> green
 		2        -> yellow
@@ -51,18 +53,26 @@ local STAGGER_OUTLINE_TEMPLATES = {
 	[3] = OutlineSettings.templates.tb_stagger_3,
 }
 
-local function get_stagger_state(blackboard)
-	local stagger = blackboard.stagger
-
-	if not stagger or stagger <= 0 then
+local function get_stagger_state(total)
+	if not total or total <= 0 then
 		return 0
-	elseif stagger == 1 then
+	elseif total == 1 then
 		return 1
-	elseif stagger == 2 then
+	elseif total == 2 then
 		return 2
 	else
 		return 3
 	end
+end
+
+local function get_mainstay_count(unit)
+	local target_buff_extension = ScriptUnit.has_extension(unit, "buff_system")
+
+	if not target_buff_extension then
+		return 0
+	end
+
+	return target_buff_extension:apply_buffs_to_value(0, "dummy_stagger")
 end
 
 -- unit -> { outline_id = ..., state = ... }
@@ -152,9 +162,22 @@ mod.update = function (dt)
 		end
 	end
 
+	local include_real = mod:get("stagger_state_visualizer_include_real")
+	local include_mainstay = mod:get("stagger_state_visualizer_include_mainstay")
+
 	for unit, blackboard in pairs(BLACKBOARDS) do
 		if ALIVE[unit] then
-			local state = get_stagger_state(blackboard)
+			local total = 0
+
+			if include_real then
+				total = total + (blackboard.stagger or 0)
+			end
+
+			if include_mainstay then
+				total = total + get_mainstay_count(unit)
+			end
+
+			local state = get_stagger_state(total)
 
 			if state == 0 then
 				clear_outline(unit)
