@@ -103,13 +103,18 @@ mod:dofile("scripts/mods/TourneyBalance/changes/career_changes")
 mod:dofile("scripts/mods/TourneyBalance/changes/SpicyEnemies")
 
 -- Performance Logging System
-mod:dofile("scripts/mods/TourneyBalance/logging_and_qol/performance_logging")
+-- Disabled: its mod.update collided with stagger_state_visualizer.lua's (both claim
+-- the single mod.update field). Not needed right now, so left off rather than chained.
+-- mod:dofile("scripts/mods/TourneyBalance/logging_and_qol/performance_logging")
 
 -- Mod Checker
 mod:dofile("scripts/mods/TourneyBalance/logging_and_qol/mod_checker")
 
 -- Basic QOL Features
 mod:dofile("scripts/mods/TourneyBalance/logging_and_qol/basic_qol")
+
+-- Debugging Tools
+mod:dofile("scripts/mods/TourneyBalance/debugging/stagger_state_visualizer")
 
 -- on_remove_stack_down
 --[[

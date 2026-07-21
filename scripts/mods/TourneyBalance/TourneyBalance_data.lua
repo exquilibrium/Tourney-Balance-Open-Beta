@@ -66,6 +66,19 @@ return {
 				title = "performance_logging_title",
 				tooltip = "performance_logging_description",
 			},
+			{
+				setting_id = "debugging",
+				type = "group",
+				sub_widgets = {
+					{
+						type = "checkbox",
+						setting_id = "stagger_state_visualizer",
+						default_value = false,
+						title = "stagger_state_visualizer_title",
+						tooltip = "stagger_state_visualizer_description",
+					},
+				},
+			},
 		}
 	}
 }

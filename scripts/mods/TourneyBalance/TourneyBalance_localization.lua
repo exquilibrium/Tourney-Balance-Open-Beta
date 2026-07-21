@@ -403,6 +403,18 @@ local localization = {
 			.. "\n자세한 내용은 워크숍의 모드 설명을 참조하세요."
 			.. "\n이 옵션은 이벤트 중 자동으로 활성화됩니다.",
 	},
+
+	-- Debugging
+	debugging = {
+		en = "Debugging",
+	},
+	stagger_state_visualizer_title = {
+		en = "Stagger State Visualizer",
+	},
+	stagger_state_visualizer_description = {
+		en = "Outlines enemies based on their current stagger count."
+			.. "\nGreen = 1, Yellow = 2, Red = more than 2, No outline = 0.",
+	},
 }
 
 -- check for korean
