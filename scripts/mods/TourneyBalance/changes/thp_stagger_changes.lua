@@ -988,7 +988,7 @@ local talent_first_row = {
 	{ "dr_engineer", VANGUARD, REAPER, BLOODLUST },
 
 	{ "we_waywatcher", REGROWTH, REAPER, BLOODLUST },
-	{ "we_maidenguard", REAPER, REGROWTH, VANGUARD },
+	{ "we_maidenguard", REAPER, REGROWTH, VANGUARD }, -- Bloodlust > Regrowth
 	{ "we_shade", REGROWTH, BLOODLUST, REAPER },
 	{ "we_thornsister", REGROWTH, BLOODLUST, REAPER },
 
@@ -999,8 +999,8 @@ local talent_first_row = {
 
 	{ "bw_adept", VANGUARD, BLOODLUST, REAPER },
 	{ "bw_scholar", REAPER, BLOODLUST, REGROWTH },
-	{ "bw_necromancer", REAPER, BLOODLUST, REGROWTH },
 	{ "bw_unchained", VANGUARD, REAPER, BLOODLUST },
+	{ "bw_necromancer", REAPER, BLOODLUST, REGROWTH },
 }
 
 for i = 1, #talent_first_row do
@@ -1061,35 +1061,30 @@ local TALENT_OPTIONS = {
 }
 -- career_name, talent 3-1, talent 3-2, talent 3-3
 local talent_third_row = {
-	{ "es_mercenary", SMITER, FINESSE, ENHANCED_POWER },
-	{ "es_huntsman", SMITER, FINESSE, ENHANCED_POWER },
-	-- { "es_knight", SMITER, TANK, ENHANCED_POWER },
-	{ "es_knight", TANK, MAINSTAY, ENHANCED_POWER }, -- official
-	{ "es_questingknight", TANK, SMITER, ENHANCED_POWER }, -- official
+	{ "es_mercenary", FINESSE, SMITER, ENHANCED_POWER }, -- Mainstay > Finesse
+	{ "es_huntsman", FINESSE, SMITER, ENHANCED_POWER }, -- Bulwark > Finesse
+	{ "es_knight", TANK, MAINSTAY, ENHANCED_POWER },
+	{ "es_questingknight", TANK, SMITER, ENHANCED_POWER },
 
+	{ "dr_ranger", SMITER, FINESSE, ENHANCED_POWER }, -- Bulwark > Smiter, Mainstay > Finesse
+	{ "dr_ironbreaker", TANK, SMITER, ENHANCED_POWER },
+	{ "dr_slayer", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Finesse
+	{ "dr_engineer", TANK, SMITER, ENHANCED_POWER }, -- Mainstay > Smiter
 
-	{ "dr_ranger", SMITER, FINESSE, ENHANCED_POWER },
-	-- { "dr_ironbreaker", SMITER, TANK, ENHANCED_POWER },
-	{ "dr_ironbreaker", TANK, SMITER, ENHANCED_POWER }, -- official
-	{ "dr_slayer", SMITER, FINESSE, ENHANCED_POWER },
-	{ "dr_engineer", SMITER, TANK, ENHANCED_POWER },
-
-	{ "we_waywatcher", SMITER, FINESSE, ENHANCED_POWER },
-	{ "we_maidenguard", SMITER, TANK, ENHANCED_POWER },
+	{ "we_waywatcher", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Smiter
+	{ "we_maidenguard", SMITER, MAINSTAY, ENHANCED_POWER },
 	{ "we_shade", SMITER, FINESSE, ENHANCED_POWER },
-	-- { "we_thornsister", SMITER, FINESSE, ENHANCED_POWER },
-	{ "we_thornsister", SMITER, MAINSTAY, ENHANCED_POWER }, -- official
+	{ "we_thornsister", SMITER, MAINSTAY, ENHANCED_POWER },
 
-	{ "wh_captain", SMITER, FINESSE, ENHANCED_POWER },
+	{ "wh_captain", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Smiter
 	{ "wh_bountyhunter", SMITER, FINESSE, ENHANCED_POWER },
-	{ "wh_zealot", SMITER, FINESSE, ENHANCED_POWER },
-	-- { "wh_priest", SMITER, TANK, ENHANCED_POWER },
-	{ "wh_priest", SMITER, MAINSTAY, ENHANCED_POWER }, -- official
+	{ "wh_zealot", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Finesse
+	{ "wh_priest", SMITER, MAINSTAY, ENHANCED_POWER },
 	
-	{ "bw_adept", SMITER, TANK, ENHANCED_POWER },
-	{ "bw_scholar", SMITER, FINESSE, ENHANCED_POWER },
-	{ "bw_unchained", SMITER, TANK, ENHANCED_POWER },
-	{ "bw_necromancer", SMITER, TANK, ENHANCED_POWER },
+	{ "bw_adept", TANK, SMITER, ENHANCED_POWER },
+	{ "bw_scholar", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Assassin
+	{ "bw_unchained", TANK, SMITER, ENHANCED_POWER }, -- Mainstay > Smiter
+	{ "bw_necromancer", MAINSTAY, SMITER, ENHANCED_POWER },
 }
 
 for i = 1, #talent_third_row do
