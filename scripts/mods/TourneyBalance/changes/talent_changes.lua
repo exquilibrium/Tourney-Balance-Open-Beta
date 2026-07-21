@@ -774,6 +774,36 @@ mod:add_text("ranger_veteran_foe_feller_attack_speed_desc", "Increases attack sp
 --Ales
 Weapons.bardin_survival_ale.actions.action_one.default.total_time = 0.8
 
+-- 1 Frag or Fire bomb per game
+mod:add_text("career_passive_desc_dr_3a_2", "Whenever a special is killed, Bardin will drop an ammo pickup at his feet. This pickup restores 10% of the player's max ammunition, rounded down. Additionally, there is a 5% chance to drop a bomb, once per game.")
+
+local RangerVeteranBonusBombDrops = {
+	{ name = "frag_grenade_t1", weight = 30 },
+	{ name = "frag_grenade_t2", weight = 15 },
+	{ name = "fire_grenade_t1", weight = 30 },
+	{ name = "fire_grenade_t2", weight = 15 },
+	{ name = "engineer_grenade_t1", weight = 10 },
+}
+
+local function pick_weighted_bomb_drop(drops)
+	local total_weight = 0
+
+	for _, drop in ipairs(drops) do
+		total_weight = total_weight + drop.weight
+	end
+
+	local roll = math.random(1, total_weight)
+	local cumulative_weight = 0
+
+	for _, drop in ipairs(drops) do
+		cumulative_weight = cumulative_weight + drop.weight
+
+		if roll <= cumulative_weight then
+			return drop.name
+		end
+	end
+end
+
 mod:add_proc_function("gs_bardin_ranger_scavenge_proc", function (owner_unit, buff, params)
 	if not Managers.state.network.is_server then
 		return
@@ -791,6 +821,16 @@ mod:add_proc_function("gs_bardin_ranger_scavenge_proc", function (owner_unit, bu
 			local player_pos = POSITION_LOOKUP[owner_unit] + Vector3.up() * 0.1
 			local raycast_down = true
 			local pickup_system = Managers.state.entity:system("pickup_system")
+
+			if not buff.bonus_bomb_dropped and math.random(1, 100) <= 5 then
+				local bonus_bomb = pick_weighted_bomb_drop(RangerVeteranBonusBombDrops)
+
+				pickup_system:buff_spawn_pickup(bonus_bomb, player_pos + offset_position_1, raycast_down)
+
+				if bonus_bomb ~= "engineer_grenade_t1" then
+					buff.bonus_bomb_dropped = true
+				end
+			end
 
 			if talent_extension:has_talent("bardin_ranger_passive_spawn_potions_or_bombs", "dwarf_ranger", true) then
 				local counter = buff.counter
@@ -2168,6 +2208,14 @@ mod:add_proc_function("tb_isjya_extend_animosity_on_headshot", function (owner_u
 	if animosity_buff and animosity_buff.duration then
 		animosity_buff.duration = math.min(animosity_buff.duration + buff.bonus, ISJYA_ANIMOSITY_MAX_DURATION)
 		animosity_buff.end_time = animosity_buff.start_time + animosity_buff.duration
+
+		local remaining_duration = animosity_buff.end_time - Managers.time:time("game")
+
+		if remaining_duration > 0 then
+			buff_extension:add_buff("tb_isjya_headshot_stacks", {
+				external_optional_duration = remaining_duration,
+			})
+		end
 	end
 end)
 
@@ -2175,6 +2223,13 @@ mod:add_talent_buff_template("witch_hunter", "tb_isjya_extend_animosity_on_heads
 	buff_func = "tb_isjya_extend_animosity_on_headshot",
 	event = "on_hit",
 	bonus = 2,
+})
+
+-- I Shall Judge You All: purely cosmetic stack counter (reuses Animosity's icon) tracking qualifying headshots landed this Animosity, capped at 12
+mod:add_talent_buff_template("witch_hunter", "tb_isjya_headshot_stacks", {
+	icon = "victor_witchhunter_activated_ability",
+	max_stacks = 12,
+	refresh_durations = true,
 })
 
 -- I Shall Judge You All: once Animosity has been active for 6 seconds, its crit bonus decays 1% per second (25% -> 24% at 6s, 23% at 7s, 22% at 8s, ...)
