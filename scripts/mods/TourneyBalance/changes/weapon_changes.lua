@@ -219,6 +219,10 @@ DamageProfileTemplates.arrow_sniper_kruber.critical_strike.attack_armor_power_mo
 --Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 0.9
 --- Bash Nerf 2.0
 -- Adds max stamina, stamina consumption, and removes chaining/starting the bash below 2 stamina points.
+-- Both condition_func and chain_condition_func are needed: chain_condition_func only gates transitions
+-- while chaining from a currently active action (e.g. fire-into-bash, bash-into-bash); a fresh press from
+-- true idle (no current action) goes through a separate fallback in player_character_state_helper.lua that
+-- only checks condition_func, so without it the stamina gate could be bypassed by simply standing still.
 local MIN_STAMINA_POINTS_TO_BASH = 2
 
 local function can_start_bash(owner_unit, input_extension)
@@ -230,14 +234,17 @@ end
 
 Weapons.blunderbuss_template_1.max_fatigue_points = 6 -- nil
 Weapons.blunderbuss_template_1.actions.action_two.default.add_fatigue_on_hit = true
+Weapons.blunderbuss_template_1.actions.action_two.default.condition_func = can_start_bash
 Weapons.blunderbuss_template_1.actions.action_two.default.chain_condition_func = can_start_bash
 
 Weapons.grudge_raker_template_1.max_fatigue_points = 6 -- nil
 Weapons.grudge_raker_template_1.actions.action_two.default.add_fatigue_on_hit = true
+Weapons.grudge_raker_template_1.actions.action_two.default.condition_func = can_start_bash
 Weapons.grudge_raker_template_1.actions.action_two.default.chain_condition_func = can_start_bash
 
 Weapons.wh_deus_01_template_1.max_fatigue_points = 6 -- nil
 Weapons.wh_deus_01_template_1.actions.action_two.default.add_fatigue_on_hit = true
+Weapons.wh_deus_01_template_1.actions.action_two.default.condition_func = can_start_bash
 Weapons.wh_deus_01_template_1.actions.action_two.default.chain_condition_func = can_start_bash
 
 -- Prevent weapon swap while fatigued

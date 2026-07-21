@@ -2142,7 +2142,7 @@ mod:add_text("victor_witchhunter_improved_damage_taken_ping_desc_new", "Witch Hu
 
 
 -- I Shall Judge You All: Headshotting enemies affected by Witch Hunt extends crit duration by 2 seconds
-local ISJYA_ANIMOSITY_MAX_DURATION = 90
+local ISJYA_ANIMOSITY_MAX_DURATION = 24
 
 mod:add_proc_function("tb_isjya_extend_animosity_on_headshot", function (owner_unit, buff, params)
 	if not Unit.alive(owner_unit) then
@@ -2177,6 +2177,46 @@ mod:add_talent_buff_template("witch_hunter", "tb_isjya_extend_animosity_on_heads
 	bonus = 2,
 })
 
+-- I Shall Judge You All: once Animosity has been active for 6 seconds, its crit bonus decays 1% per second (25% -> 24% at 6s, 23% at 7s, 22% at 8s, ...)
+local ISJYA_ANIMOSITY_BASE_BONUS = 0.25
+local ISJYA_ANIMOSITY_BASE_DURATION = 6
+local ISJYA_ANIMOSITY_DECAY_PER_SECOND = 0.01
+
+mod:add_buff_function("tb_isjya_animosity_crit_decay", function (unit, buff, params, world)
+	local time_into_buff = params.time_into_buff
+
+	if not time_into_buff or time_into_buff < ISJYA_ANIMOSITY_BASE_DURATION then
+		return
+	end
+
+	local talent_extension = ScriptUnit.has_extension(unit, "talent_system")
+
+	if not talent_extension or not talent_extension:has_talent("victor_captain_activated_ability_stagger_ping_debuff") then
+		return
+	end
+
+	local seconds_past_base = math.floor(time_into_buff - (ISJYA_ANIMOSITY_BASE_DURATION - 1))
+	local target_bonus = math.max(0, ISJYA_ANIMOSITY_BASE_BONUS - ISJYA_ANIMOSITY_DECAY_PER_SECOND * seconds_past_base)
+
+	if math.abs(target_bonus - (buff.bonus or 0)) < 0.0001 then
+		return
+	end
+
+	local buff_extension = ScriptUnit.extension(unit, "buff_system")
+
+	buff_extension:remove_buff(buff.id)
+	buff_extension:add_buff(buff.buff_template_name, {
+		external_optional_bonus = target_bonus,
+		external_optional_duration = buff.duration,
+		_hot_join_sync_buff_age = time_into_buff,
+	})
+end)
+
+mod:modify_talent_buff_template("witch_hunter", "victor_witchhunter_activated_ability_crit_buff", {
+	update_func = "tb_isjya_animosity_crit_decay",
+	update_frequency = 1,
+})
+
 mod:modify_talent("wh_captain", 6, 1, {
 	buffs = {
 		"tb_isjya_extend_animosity_on_headshot",
@@ -2184,7 +2224,7 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity. Headshotting enemies affected by Witch Hunt extends the duration of Animosity by 2 seconds.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity. Headshotting enemies affected by Witch Hunt extends the duration of Animosity by 2 seconds. Animosity's critical strike chance bonus decays by 1% per second after the first 6 seconds.")
 
 --[[ Ping All Specials on WHC ISJYA ULT
 local PING_DURATION = 15

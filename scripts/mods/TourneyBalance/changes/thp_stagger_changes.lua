@@ -600,7 +600,7 @@ mod:hook_origin(DamageUtils, "calculate_damage", function (damage_output, target
 
 		local min_stagger_damage_coefficient = difficulty_settings.min_stagger_damage_coefficient
 		--local stagger_damage_multiplier = difficulty_settings.stagger_damage_multiplier
-		local stagger_damage_multiplier = 0.2 -- fixed 20% per stagger count (1/2/3 -> 20%/40%/60%), regardless of difficulty_settings.stagger_damage_multiplier
+		local stagger_damage_multiplier = 0.2 -- fixed 20% per stagger count (1/2 -> 20%/40%), regardless of difficulty_settings.stagger_damage_multiplier
 
 		if stagger_damage_multiplier then
 			local bonus_damage_percentage = stagger_number * stagger_damage_multiplier
@@ -892,7 +892,7 @@ mod:add_buff_template("rebaltourn_tank_unbalance", {
 	event = "on_stagger",
 	display_multiplier = 0.2,
 	stat_buff = "power_level_impact",
-	multiplier = 0.15
+	multiplier = 0.10
 })
 mod:add_buff_template("rebaltourn_tank_unbalance_buff", { -- Bulwark
 	refresh_durations = true,
@@ -940,7 +940,7 @@ mod:add_text("rebaltourn_smiter_unbalance_desc", 	"The first enemy hit always co
 mod:add_text("assassin_name", "Assassin")
 mod:add_text("rebaltourn_finesse_unbalance_desc", 	"Headshots inflict 40% bonus damage.\n\nDeal 20% more damage to staggered enemies, increased to 40% against enemies afflicted by more than one stagger effect.")
 mod:add_text("bulwark_name", "Bulwark")
-mod:add_text("rebaltourn_tank_unbalance_desc", 		"Gain 20% stagger power. Enemies that you stagger with any attack take 10% more damage from all sources for 10 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
+mod:add_text("rebaltourn_tank_unbalance_desc", 		"Gain 10% stagger power. Enemies that you stagger with any attack take 10% more damage from all sources for 10 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
 mod:add_text("mainstay_name", "Mainstay")
 mod:add_text("rebaltourn_linesman_unbalance_desc", 	"Each melee hit against enemy adds another count of stagger for 2s.\n\nDeal 20% more damage to staggered enemies, increased to 40% against enemies afflicted by more than one stagger effect.")
 mod:add_text("enhanced_power_name", "Enhanced Power")
@@ -980,30 +980,30 @@ local THP_TALENT_OPTIONS = {
 }
 -- career_name, talent 1-1, talent 1-2, talent 1-3
 local talent_first_row = {
-	{ "es_mercenary", REAPER, BLOODLUST, VANGUARD },
-	{ "es_huntsman", VANGUARD, BLOODLUST, REAPER },
-	{ "es_knight", VANGUARD, REAPER, BLOODLUST },
-	{ "es_questingknight", VANGUARD, BLOODLUST, REAPER },
+	{ "es_mercenary", 		REAPER, 	BLOODLUST, 	VANGUARD },
+	{ "es_huntsman", 		VANGUARD, 	BLOODLUST, 	REAPER },
+	{ "es_knight", 			VANGUARD, 	REAPER, 	BLOODLUST },
+	{ "es_questingknight", 	VANGUARD, 	BLOODLUST, 	REAPER },
 
-	{ "dr_ranger", VANGUARD, REAPER, BLOODLUST },
-	{ "dr_ironbreaker", VANGUARD, BLOODLUST, REAPER },
-	{ "dr_slayer", REAPER, BLOODLUST, REGROWTH },
-	{ "dr_engineer", VANGUARD, REAPER, BLOODLUST },
+	{ "dr_ranger", 			VANGUARD, 	REAPER, 	BLOODLUST },
+	{ "dr_ironbreaker", 	VANGUARD, 	BLOODLUST, 	REAPER },
+	{ "dr_slayer", 			REAPER, 	BLOODLUST, 	REGROWTH },
+	{ "dr_engineer", 		VANGUARD, 	REAPER, 	BLOODLUST },
 
-	{ "we_waywatcher", REGROWTH, REAPER, BLOODLUST },
-	{ "we_maidenguard", REAPER, REGROWTH, VANGUARD }, -- Bloodlust > Regrowth
-	{ "we_shade", REGROWTH, BLOODLUST, REAPER },
-	{ "we_thornsister", REGROWTH, BLOODLUST, REAPER },
+	{ "we_waywatcher", 		REGROWTH, 	REAPER, 	BLOODLUST },
+	{ "we_maidenguard", 	REAPER, 	REGROWTH, 	VANGUARD }, -- Bloodlust > Regrowth
+	{ "we_shade", 			REGROWTH, 	BLOODLUST, 	REAPER },
+	{ "we_thornsister", 	REGROWTH, 	BLOODLUST, 	REAPER },
 
-	{ "wh_captain", REGROWTH, REAPER, BLOODLUST },
-	{ "wh_bountyhunter", REGROWTH, BLOODLUST, REAPER },
-	{ "wh_zealot", REAPER, BLOODLUST, VANGUARD },
-	{ "wh_priest", VANGUARD, REAPER, BLOODLUST },
+	{ "wh_captain", 		REGROWTH, 	REAPER, 	BLOODLUST },
+	{ "wh_bountyhunter", 	REGROWTH, 	BLOODLUST, 	REAPER },
+	{ "wh_zealot", 			REAPER, 	BLOODLUST, 	VANGUARD },
+	{ "wh_priest", 			VANGUARD, 	REAPER, 	BLOODLUST },
 
-	{ "bw_adept", VANGUARD, BLOODLUST, REAPER },
-	{ "bw_scholar", REAPER, BLOODLUST, REGROWTH },
-	{ "bw_unchained", VANGUARD, REAPER, BLOODLUST },
-	{ "bw_necromancer", REAPER, BLOODLUST, REGROWTH },
+	{ "bw_adept", 			VANGUARD, 	BLOODLUST, 	REAPER },
+	{ "bw_scholar", 		REAPER, 	BLOODLUST, 	REGROWTH },
+	{ "bw_unchained", 		VANGUARD, 	REAPER, 	BLOODLUST },
+	{ "bw_necromancer", 	REAPER, 	BLOODLUST, 	REGROWTH },
 }
 
 for i = 1, #talent_first_row do
@@ -1064,30 +1064,30 @@ local TALENT_OPTIONS = {
 }
 -- career_name, talent 3-1, talent 3-2, talent 3-3
 local talent_third_row = {
-	{ "es_mercenary", FINESSE, SMITER, ENHANCED_POWER }, -- Mainstay > Finesse
-	{ "es_huntsman", FINESSE, SMITER, ENHANCED_POWER }, -- Bulwark > Finesse
-	{ "es_knight", TANK, MAINSTAY, ENHANCED_POWER },
-	{ "es_questingknight", TANK, SMITER, ENHANCED_POWER },
+	{ "es_mercenary", 		FINESSE, 	SMITER, 	ENHANCED_POWER }, -- Mainstay > Finesse
+	{ "es_huntsman", 		FINESSE, 	SMITER, 	ENHANCED_POWER }, -- Bulwark > Finesse
+	{ "es_knight", 			TANK, 		MAINSTAY, 	ENHANCED_POWER },
+	{ "es_questingknight", 	TANK, 		SMITER, 	ENHANCED_POWER },
 
-	{ "dr_ranger", SMITER, FINESSE, ENHANCED_POWER }, -- Bulwark > Smiter, Mainstay > Finesse
-	{ "dr_ironbreaker", TANK, SMITER, ENHANCED_POWER },
-	{ "dr_slayer", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Finesse
-	{ "dr_engineer", TANK, SMITER, ENHANCED_POWER }, -- Mainstay > Smiter
+	{ "dr_ranger", 			TANK,		MAINSTAY, 	ENHANCED_POWER },
+	{ "dr_ironbreaker", 	TANK, 		SMITER, 	ENHANCED_POWER },
+	{ "dr_slayer", 			FINESSE, 	MAINSTAY, 	ENHANCED_POWER }, -- Smiter > Finesse
+	{ "dr_engineer", 		TANK, 		MAINSTAY, 	ENHANCED_POWER },
 
-	{ "we_waywatcher", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Smiter
-	{ "we_maidenguard", SMITER, MAINSTAY, ENHANCED_POWER },
-	{ "we_shade", SMITER, FINESSE, ENHANCED_POWER },
-	{ "we_thornsister", SMITER, MAINSTAY, ENHANCED_POWER },
+	{ "we_waywatcher", 		SMITER, 	FINESSE, 	ENHANCED_POWER }, -- Mainstay > Smiter
+	{ "we_maidenguard", 	SMITER, 	MAINSTAY, 	ENHANCED_POWER },
+	{ "we_shade", 			SMITER, 	FINESSE, 	ENHANCED_POWER },
+	{ "we_thornsister", 	BULWARK, 	MAINSTAY, 	ENHANCED_POWER }, -- Smiter > Bulwark
 
-	{ "wh_captain", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Smiter
-	{ "wh_bountyhunter", SMITER, FINESSE, ENHANCED_POWER },
-	{ "wh_zealot", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Finesse
-	{ "wh_priest", SMITER, MAINSTAY, ENHANCED_POWER },
+	{ "wh_captain", 		SMITER, 	FINESSE, 	ENHANCED_POWER }, -- Mainstay > Smiter
+	{ "wh_bountyhunter", 	SMITER, 	FINESSE, 	ENHANCED_POWER },
+	{ "wh_zealot", 			SMITER, 	FINESSE, 	ENHANCED_POWER }, -- Mainstay > Finesse
+	{ "wh_priest", 			SMITER, 	MAINSTAY, 	ENHANCED_POWER },
 	
-	{ "bw_adept", TANK, SMITER, ENHANCED_POWER },
-	{ "bw_scholar", SMITER, FINESSE, ENHANCED_POWER }, -- Mainstay > Assassin
-	{ "bw_unchained", TANK, SMITER, ENHANCED_POWER }, -- Mainstay > Smiter
-	{ "bw_necromancer", MAINSTAY, SMITER, ENHANCED_POWER },
+	{ "bw_adept", 			TANK, 		SMITER, 	ENHANCED_POWER },
+	{ "bw_scholar", 		SMITER, 	FINESSE, 	ENHANCED_POWER }, -- Mainstay > Assassin
+	{ "bw_unchained", 		TANK, 		MAINSTAY, 	ENHANCED_POWER },
+	{ "bw_necromancer", 	MAINSTAY, 	SMITER, 	ENHANCED_POWER },
 }
 
 for i = 1, #talent_third_row do
