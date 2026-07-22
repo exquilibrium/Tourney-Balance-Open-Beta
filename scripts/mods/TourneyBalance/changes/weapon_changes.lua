@@ -213,16 +213,10 @@ DamageProfileTemplates.arrow_carbine.default_target.boost_curve_coefficient = 0.
 DamageProfileTemplates.arrow_carbine.default_target.boost_curve_coefficient_headshot = 0.8 -- 1
 DamageProfileTemplates.arrow_sniper_kruber.critical_strike.attack_armor_power_modifer = { 1, 1, 1, 1, 0.75, 0.5 }
 
--- Old Bash Nerf
---Weapons.blunderbuss_template_1.actions.action_two.default.push_radius = 0.9
---Weapons.grudge_raker_template_1.actions.action_two.default.push_radius = 0.9
---Weapons.wh_deus_01_template_1.actions.action_two.default.push_radius = 0.9
 --- Bash Nerf 2.0
 -- Adds max stamina, stamina consumption, and removes chaining/starting the bash below 2 stamina points.
--- Both condition_func and chain_condition_func are needed: chain_condition_func only gates transitions
--- while chaining from a currently active action (e.g. fire-into-bash, bash-into-bash); a fresh press from
--- true idle (no current action) goes through a separate fallback in player_character_state_helper.lua that
--- only checks condition_func, so without it the stamina gate could be bypassed by simply standing still.
+-- chain_condition_func gates transitions from active actions (e.g. fire-into-bash, bash-into-bash)
+-- condition_func gates true idle state (no current action); separate fallback state in player_character_state_helper.lua
 local MIN_STAMINA_POINTS_TO_BASH = 2
 
 local function can_start_bash(owner_unit, input_extension)

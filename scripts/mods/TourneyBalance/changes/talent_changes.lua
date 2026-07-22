@@ -2095,8 +2095,13 @@ mod:add_talent_buff_template("wood_elf", "tb_cd_thorn", {
 	multiplier = -0.4, -- META SHIFT
 	max_stacks = 1
 })
-mod:add_text("kerillian_thorn_sister_debuff_wall_desc_2", "Thornwake instead causes roots to burst from the ground, staggering enemies and applying Blackvenom to them. Reduces cooldown by 30%%.")
+mod:add_text("kerillian_thorn_sister_debuff_wall_desc_2", "Thornwake instead causes roots to burst from the ground, staggering enemies and applying Blackvenom to them. Reduces cooldown by 40%%.")
 
+-- Briar's Malice
+-- consume only on hit
+mod:modify_talent_buff_template("wood_elf", "kerillian_thorn_sister_crit_on_any_ability_handler", {
+	event = "on_hit"
+})
 
 --[[
 
@@ -2279,10 +2284,10 @@ mod:modify_talent("wh_captain", 6, 1, {
 	description = "victor_captain_activated_ability_stagger_ping_debuff_desc_new",
 	description_values = {},
 })
-mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity. Headshotting enemies affected by Witch Hunt extends the duration of Animosity by 2 seconds. Animosity's critical strike chance bonus decays by 1% per second after the first 6 seconds.")
+mod:add_text("victor_captain_activated_ability_stagger_ping_debuff_desc_new", "Applies Witch Hunt to enemies hit by Animosity and permanently to all specials.\n\nHeadshotting enemies affected by Witch Hunt extends the duration of Animosity by 2 seconds. Animosity's critical strike chance bonus decays by 1% per second after the first 6 seconds.")
 
---[[ Ping All Specials on WHC ISJYA ULT
-local PING_DURATION = 15
+--[[ Ping All Specials on WHC ISJYA ULT ]]
+local PING_DURATION = 150
 local marked_enemies = {}
 
 OutlineSettings.colors.tb_judged_special = {
@@ -2383,7 +2388,7 @@ mod:hook_safe(IngameHud, "update", function (self)
 		end
 	end
 end)
-]]
+
 
 --[[
 

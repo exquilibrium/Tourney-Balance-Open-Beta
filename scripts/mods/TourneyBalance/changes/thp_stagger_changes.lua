@@ -945,7 +945,7 @@ mod:add_text("rebaltourn_finesse_unbalance_desc", 	"Headshots inflict 40% bonus 
 mod:add_text("bulwark_name", "Bulwark")
 mod:add_text("rebaltourn_tank_unbalance_desc", 		"Gain 10% stagger power. Enemies that you stagger with any attack take 10% more damage from all sources for 10 seconds.\n\nDeal 20% more damage to staggered enemies, increased to 40% against targets afflicted by more than one stagger effect.")
 mod:add_text("mainstay_name", "Mainstay")
-mod:add_text("rebaltourn_linesman_unbalance_desc", 	"Melee hits against the first 5  enemy add another count of stagger for 2s.\n\nDeal 20% more damage to staggered enemies, increased to 40% against enemies afflicted by more than one stagger effect.")
+mod:add_text("rebaltourn_linesman_unbalance_desc", 	"Melee hits against the first 5 enemy add another count of stagger for 2s.\n\nDeal 20% more damage to staggered enemies, increased to 40% against enemies afflicted by more than one stagger effect.")
 mod:add_text("enhanced_power_name", "Enhanced Power")
 
 -- Replacing THP & Stagger Talents
