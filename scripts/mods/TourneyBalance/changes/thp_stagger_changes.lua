@@ -1080,7 +1080,7 @@ local talent_third_row = {
 	{ "we_waywatcher", 		SMITER, 	FINESSE, 	ENHANCED_POWER }, -- Mainstay > Smiter
 	{ "we_maidenguard", 	SMITER, 	MAINSTAY, 	ENHANCED_POWER },
 	{ "we_shade", 			SMITER, 	FINESSE, 	ENHANCED_POWER },
-	{ "we_thornsister", 	BULWARK, 	MAINSTAY, 	ENHANCED_POWER }, -- Smiter > Bulwark
+	{ "we_thornsister", 	TANK, 		MAINSTAY, 	ENHANCED_POWER }, -- Smiter > Bulwark
 
 	{ "wh_captain", 		SMITER, 	FINESSE, 	ENHANCED_POWER }, -- Mainstay > Smiter
 	{ "wh_bountyhunter", 	SMITER, 	FINESSE, 	ENHANCED_POWER },
