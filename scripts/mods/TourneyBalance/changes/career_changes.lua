@@ -1209,10 +1209,13 @@ CharacterStateHelper.check_to_start_dodge = function (unit, input_extension, sta
 		Managers.state.entity:system("play_go_tutorial_system"):register_dodge(dodge_direction)
 
 		-- Stam-Tech Internal CD check
-		local last_stam_tech_t = status_extension._stam_tech_last_t
-		if not last_stam_tech_t or t - last_stam_tech_t >= STAM_TECH_COOLDOWN then
-			status_extension._stam_tech_last_t = t
-			status_extension:add_fatigue_points("action_dodge")
+		-- fatigue can only exceed MAX_FATIGUE via the unclamped wield-swap rescale in GenericStatusExtension.update
+		if status_extension.fatigue > PlayerUnitStatusSettings.MAX_FATIGUE then
+			local last_stam_tech_t = status_extension._stam_tech_last_t
+			if not last_stam_tech_t or t - last_stam_tech_t >= STAM_TECH_COOLDOWN then
+				status_extension._stam_tech_last_t = t
+				status_extension:add_fatigue_points("action_dodge")
+			end
 		end
 
 		status_extension:set_dodge_locked(true)
