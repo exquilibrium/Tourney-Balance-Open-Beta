@@ -3822,7 +3822,7 @@ NewDamageProfileTemplates.tb_1h_hammer_heavy = {
 		}
 	},
 	critical_strike = "critical_strike_smiter_M",
-	charge_value = "light_attack",
+	charge_value = "heavy_attack", -- WHY WAS THIS LIGHT ATTACK BEFORE???
 	cleave_distribution = "cleave_distribution_smiter_default",
 	default_target = "default_target_smiter_M",
 	targets = "targets_smiter_M",
@@ -4861,7 +4861,6 @@ NewDamageProfileTemplates.tb_2h_hammer_heavy_2_priest = {
 Weapons.one_hand_falchion_template_1.actions.action_one.light_attack_left.damage_profile = "tb_falchion_lights"
 Weapons.one_hand_falchion_template_1.actions.action_one.light_attack_right.damage_profile = "tb_falchion_lights"
 Weapons.one_hand_falchion_template_1.actions.action_one.light_attack_bopp.damage_profile = "tb_falchion_lights"
-Weapons.one_hand_falchion_template_1.actions.action_one.light_attack_down.damage_profile = "light_slashing_smiter_finesse"
 
 NewDamageProfileTemplates.tb_falchion_lights = {
 	armor_modifier = {
