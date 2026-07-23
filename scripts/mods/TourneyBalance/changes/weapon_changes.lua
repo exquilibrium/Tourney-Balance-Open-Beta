@@ -4432,7 +4432,7 @@ NewDamageProfileTemplates.tb_dual_swords_light_4 = {
 		attack_template = "light_slashing_linesman",
 		boost_curve_type = "linesman_curve",
 		power_distribution = {
-			attack = 0.1,
+			attack = 0.125, --  -- 0.075
 			impact = 0.05,
 		},
 	},
@@ -4451,7 +4451,7 @@ NewDamageProfileTemplates.tb_dual_swords_light_4 = {
 			boost_curve_coefficient_headshot = 0.65, -- 1
 			boost_curve_type = "linesman_curve",
 			power_distribution = {
-				attack = 0.175, -- 0.09
+				attack = 0.185, -- 0.09
 				impact = 0.09, -- 0.05
 			},
 		},
@@ -4460,7 +4460,7 @@ NewDamageProfileTemplates.tb_dual_swords_light_4 = {
 			boost_curve_coefficient_headshot = 0.75, -- 1
 			boost_curve_type = "linesman_curve",
 			power_distribution = {
-				attack = 0.16, -- 0.075
+				attack = 0.17, -- 0.075
 				impact = 0.08, -- 0.05
 			},
 		},
@@ -4469,7 +4469,7 @@ NewDamageProfileTemplates.tb_dual_swords_light_4 = {
 			boost_curve_coefficient_headshot = 0.85, -- 1
 			boost_curve_type = "linesman_curve",
 			power_distribution = {
-				attack = 0.14, -- 0.075
+				attack = 0.165, -- 0.075
 				impact = 0.07, -- 0.05
 			},
 		},
@@ -4478,7 +4478,7 @@ NewDamageProfileTemplates.tb_dual_swords_light_4 = {
 			boost_curve_coefficient_headshot = 0.95, -- 1
 			boost_curve_type = "linesman_curve",
 			power_distribution = {
-				attack = 0.125, -- 0.075
+				attack = 0.14, -- 0.075
 				impact = 0.06, -- 0.05
 			},
 		}
